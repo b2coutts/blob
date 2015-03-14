@@ -3,10 +3,13 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <algorithm>
+#include <math.h>
 
 #include <cairo.h>
 
 using namespace std;
+const double TAU = 6.28318530718;
 
 void draw(int width, int height, vector<spoint> points)
 {
@@ -24,7 +27,7 @@ void draw(int width, int height, vector<spoint> points)
   */
 
   // Set up scale properly
-  scale_world(cr, 1.2, width, height, points);
+  scale_world(cr, 1.4, width, height, points);
 
   /*
   double x, y;
@@ -38,9 +41,17 @@ void draw(int width, int height, vector<spoint> points)
   cairo_new_path(cr);
 
 
-  cairo_set_line_width(cr, 0.01);
   // Actual code call
+  //
+  cairo_set_line_width(cr, 0.01);
   draw_with_lines(cr, points);
+
+
+  cairo_set_line_width(cr, 0.02);
+  cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
+  draw_with_smoothed_lines(cr, points);
+
+  // End actual code
 
   cairo_surface_write_to_png(surface, "image.png");
 
@@ -88,11 +99,63 @@ void scale_world(cairo_t * cr,
 
 void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
 {
-
+    cairo_new_path(cr);
     for(auto& s : points) {
         cerr << "Drawing point " << s.x << " " << s.y << endl;
         cairo_line_to(cr, s.x, s.y);
     }
     cairo_close_path(cr);
+    cairo_stroke(cr);
+}
+
+void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
+{
+    cairo_new_path(cr);
+    const double radius = 0.1;
+
+    double previous_angle = 0.0;
+
+    // TODO draw from last to first
+
+    for(size_t i = 0; i <= points.size(); i++) {
+        spoint a = points[i % points.size()];
+        spoint b = points[(i + 1) % points.size()];
+
+        double dx = b.x - a.x;
+        double dy = b.y - a.y;
+
+        double slope = (b.y - a.y) / (b.x - a.x);
+        double normal = (a.x - b.x) / (b.y - b.x);
+
+        double angle = atan2(dy, dx);
+        angle -=  TAU / 4;
+
+        double delta_angle = previous_angle - angle;
+        while(delta_angle < 0) { delta_angle += TAU; }
+        while(delta_angle > TAU) { delta_angle -= TAU; }
+
+        cerr << "Drawing line from (" << a.x << ", " << a.y
+            << ") to (" << b.x << ", " << b.y << ")" << endl;
+        cerr << "    " << "Normal: " << normal << endl;
+        cerr << "    " << "Angle: " << angle / TAU << endl;
+        cerr << "    " << "Delta: " << delta_angle / TAU << endl;
+        if(i == 0) {
+            cairo_arc(cr, a.x, a.y, radius,
+                    angle, angle);
+        } else {
+            if(delta_angle < TAU / 2) {
+
+                double midangle = (angle + previous_angle) / 2;
+                cairo_arc(cr, a.x, a.y, radius,
+                        midangle,midangle);
+            } else {
+                cairo_arc(cr, a.x, a.y, radius,
+                        //        angle, previous_angle);
+                    previous_angle, angle);
+            }
+        }
+
+        previous_angle = angle;
+    }
     cairo_stroke(cr);
 }
