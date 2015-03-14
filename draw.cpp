@@ -117,15 +117,12 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
 
     // TODO draw from last to first
 
-    for(size_t i = 0; i <= points.size(); i++) {
+    for(size_t i = 0; i <= points.size()+1; i++) {
         spoint a = points[i % points.size()];
         spoint b = points[(i + 1) % points.size()];
 
         double dx = b.x - a.x;
         double dy = b.y - a.y;
-
-        double slope = (b.y - a.y) / (b.x - a.x);
-        double normal = (a.x - b.x) / (b.y - b.x);
 
         double angle = atan2(dy, dx);
         angle -=  TAU / 4;
@@ -136,13 +133,12 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
 
         cerr << "Drawing line from (" << a.x << ", " << a.y
             << ") to (" << b.x << ", " << b.y << ")" << endl;
-        cerr << "    " << "Normal: " << normal << endl;
-        cerr << "    " << "Angle: " << angle / TAU << endl;
-        cerr << "    " << "Delta: " << delta_angle / TAU << endl;
+        cerr << "    " << "Angle: " << angle / TAU * 360 << endl;
+        cerr << "    " << "Delta: " << delta_angle / TAU  * 360<< endl;
         if(i == 0) {
-            cairo_arc(cr, a.x, a.y, radius,
-                    angle, angle);
-        } else {
+            //cairo_arc(cr, a.x, a.y, radius,
+                    //angle, angle);
+        } else if (a.inblob) {
             if(delta_angle < TAU / 2) {
 
                 double midangle = (angle + previous_angle) / 2;
@@ -152,6 +148,16 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
                 cairo_arc(cr, a.x, a.y, radius,
                         //        angle, previous_angle);
                     previous_angle, angle);
+            }
+        } else {
+
+            if(delta_angle < TAU / 2) {
+                cairo_arc_negative(cr, a.x, a.y, radius,
+                        previous_angle + TAU/2, angle + TAU/2);
+            } else {
+                double midangle = (angle + previous_angle) / 2 + TAU/2;
+                cairo_arc(cr, a.x, a.y, radius,
+                        midangle,midangle);
             }
         }
 
