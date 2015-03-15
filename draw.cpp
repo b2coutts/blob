@@ -117,7 +117,7 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
 
     // TODO draw from last to first
 
-    for(size_t i = 0; i <= points.size()+1; i++) {
+    for(size_t i = 0; i < points.size()+2; i++) {
         spoint a = points[i % points.size()];
         spoint b = points[(i + 1) % points.size()];
 

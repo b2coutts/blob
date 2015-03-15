@@ -1,3 +1,6 @@
+#ifndef DRAW_H
+#define DRAW_H
+
 #include "types.h"
 
 #include <vector>
@@ -12,3 +15,5 @@ void scale_world(cairo_t * cr,
         const std::vector<spoint> &points);
 void draw_with_lines(cairo_t *cr, const std::vector<spoint> &points);
 void draw_with_smoothed_lines(cairo_t *cr, const std::vector<spoint> &points);
+
+#endif

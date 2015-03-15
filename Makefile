@@ -7,11 +7,19 @@ LDLIBS=$(shell pkg-config --libs cairo)
 CC=${CXX}
 
 
-draw : draw.o main.o
+draw : draw.o main.o input.o blob.o
+
+blob.o : types.h blob.h
+draw.o : types.h draw.h
+main.o : types.h draw.h blob.h
+
+
+
+
 #	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c 
 #	$(CC) $(LDFLAGS) draw.o  $(LOADLIBES) $(LDLIBS)
 
 .PHONY : clean
 
 clean :
-	- rm -f draw draw.o main.o
+	- rm -f draw draw.o main.o input.o

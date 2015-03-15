@@ -1,3 +1,5 @@
+#ifndef TYPES_H
+#define TYPES_H
 
 struct spoint {
     spoint(double x, double y, bool inblob) :
@@ -7,3 +9,5 @@ struct spoint {
     double x, y;
     bool inblob;
 };
+
+#endif
