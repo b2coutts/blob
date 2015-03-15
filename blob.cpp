@@ -42,7 +42,7 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
     spoint base = *leftmost_iter;
     const spoint start = base;
 
-    inc.erase(leftmost_iter);
+    // inc.erase(leftmost_iter);
 
     double previous_angle = TAU/4;
     // Straight up is a ok way to reach the leftmost point if going
@@ -77,6 +77,7 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
 
 
         for(; endit != inc.end(); endit++) {
+            while(*endit == base){ endit++; }
             spoint &end = *endit;
             //if(j == leftmost_index) { continue; }
             double dx = end.x - base.x;
