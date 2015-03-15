@@ -18,5 +18,9 @@ int main() {
 
     points = find_hull(p.first, p.second);
 
-    draw(400, 400, points);
+    cerr << "Points:" << endl;
+    for(auto& p : points) {
+        cerr << "  (" << p.x << ", " << p.y << ")" << endl;
+    }
+    draw(400, 400, points, p.first);
 }

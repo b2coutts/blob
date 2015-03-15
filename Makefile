@@ -1,6 +1,7 @@
 
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/opt/X11/lib/pkgconfig
 CXXFLAGS+=-std=c++11
+CXXFLAGS+=-g
 CPPFLAGS+=$(shell pkg-config --cflags cairo)
 LDLIBS=$(shell pkg-config --libs cairo)
 

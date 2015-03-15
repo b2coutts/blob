@@ -11,7 +11,7 @@
 using namespace std;
 const double TAU = 6.28318530718;
 
-void draw(int width, int height, vector<spoint> points)
+void draw(int width, int height, vector<spoint> points, vector<spoint> allpoints)
 {
   cairo_surface_t *surface;
   cairo_t *cr;
@@ -38,14 +38,13 @@ void draw(int width, int height, vector<spoint> points)
   cairo_user_to_device(cr, &x, &y);
   cerr << "Point 1,1 maps to ("<<x<<", "<<y<<")" << endl;
   */
-  cairo_new_path(cr);
-
 
   // Actual code call
   //
   cairo_set_line_width(cr, 0.01);
   draw_with_lines(cr, points);
 
+  draw_points(cr, allpoints, 0.05);
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
@@ -164,4 +163,12 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
         previous_angle = angle;
     }
     cairo_stroke(cr);
+}
+void draw_points(cairo_t *cr, const std::vector<spoint> &points, const double radius) {
+
+    for(auto& s : points) {
+        cairo_new_path(cr);
+        cairo_arc(cr, s.x, s.y, radius, 0, TAU);
+        cairo_stroke(cr);
+    }
 }
