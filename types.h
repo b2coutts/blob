@@ -13,4 +13,5 @@ struct spoint {
 inline bool operator==(const spoint &l, const spoint &r) {
     return l.x == r.x && l.y == r.y && l.inblob == r.inblob;
 }
+
 #endif

@@ -20,8 +20,16 @@ const double EPSILON = 0.001;
 
 vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
 {
+    vector<spoint> hull = giftwrap(included, excluded);
 
-    return giftwrap(included, excluded);
+    for(auto& e : excluded) {
+        if(point_inside(e, hull)) {
+            cerr << "There's a excluded point inside!" << endl;
+            cerr << "  ("<<e.x<<", "<<e.y<<")" << endl;
+        }
+    }
+
+    return hull;
 }
 
 vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
@@ -135,7 +143,29 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
 }
 
 bool
-point_inside(const std::vector<spoint> &points)
+point_inside(const spoint &p, const std::vector<spoint> &points)
 {
-    return false;
+    bool inside = false;
+    spoint e0 = points[points.size() - 1];
+    bool y0 = (e0.y > p.y);
+    for(int i = 0; i < points.size(); i++) {
+        spoint e1 = points[i];
+        bool y1 = (e1.y > p.y);
+        if(y0 != y1) {
+            // t == y1 is more efficient maybe, or we can just use t2 instead
+            // as it it more obviously correct.  Should benchmark it.
+            // bool t = ((e1.y - p.y) * (e0.x - e1.x) >= (e1.x - p.x) * (e0.y - e1.y));
+            bool t2 = (p.x < ((e1.x-e0.x) * (p.y-e0.y) / (e1.y-e0.y)) + e0.x);
+            if( t2 ) {
+                inside = !inside;
+                cerr << "Flipping inside to " << inside << endl;
+                cerr << "  On iteration " << i << endl;
+                cerr << "  Comparing points (" << e0.x << ", " << e0.y
+                    << ") and (" << e1.x << ", " << e1.y << ")" << endl;
+            }
+        }
+        e0 = e1;
+        y0 = y1;
+    }
+    return inside;
 }

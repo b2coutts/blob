@@ -10,7 +10,7 @@ find_hull(std::vector<spoint> &included,
           std::vector<spoint> &excluded);
 
 bool
-point_inside(const std::vector<spoint> &points);
+point_inside(const spoint &p, const std::vector<spoint> &points);
 
 
 
