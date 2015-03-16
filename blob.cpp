@@ -2,18 +2,20 @@
 #include "types.h"
 #include "blob.h"
 
-#include <vector>
-#include <list>
-#include <limits>
-#include <iostream>
-#include <math.h>
 #include <assert.h>
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <list>
+#include <math.h>
+#include <vector>
 
 using namespace std;
 
 vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded);
 const double TAU = 6.28318530718;
 
+const double EPSILON = 0.001;
 
 
 vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
@@ -61,14 +63,19 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
 
         double best_delta_angle;
         double next_angle;
+        double next_distance;
         { // Calc for first point
-            double angle = atan2(endit->y - base.y, endit->x - base.x);
+            double dx = endit->x - base.x;
+            double dy = endit->y - base.y;
+            double distance = dx*dx + dy*dy;
+            double angle = atan2(dy, dx);
             double delta_angle = previous_angle - angle;
             while(delta_angle < 0) { delta_angle += TAU; }
             while(delta_angle > TAU) { delta_angle -= TAU; }
 
             best_delta_angle = delta_angle;
             next_angle = angle;
+            next_distance = distance;
         }
         endit++;
 
@@ -82,6 +89,7 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
             //if(j == leftmost_index) { continue; }
             double dx = end.x - base.x;
             double dy = end.y - base.y;
+            double distance = dx*dx + dy*dy;
 
             double angle = atan2(dy, dx);
 
@@ -91,14 +99,25 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
 
             //assert(delta_angle < TAU/2);
 
-            cerr << "end: (" << end.x
+            cerr << "  End: (" << end.x
                 << ", " << end.y << ")" << endl;
             cerr << "    delta_angle: " << delta_angle << endl;
-            if(best_delta_angle < delta_angle) {
-                cerr << "New best angle" << endl;
+            double delta_delta_angle = abs(best_delta_angle - delta_angle);
+            if( delta_delta_angle < EPSILON ) {
+                // If on the same line, pick the closer one
+                if(next_distance > distance) {
+                    cerr << "    New closer point" << endl;
+                    next = endit;
+                    best_delta_angle = delta_angle;
+                    next_angle = angle;
+                    next_distance = distance;
+                }
+            } else if(best_delta_angle > delta_angle) {
+                cerr << "    New best angle" << endl;
                 next = endit;
                 best_delta_angle = delta_angle;
                 next_angle = angle;
+                next_distance = distance;
             }
         }
 
@@ -108,6 +127,8 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
         inc.erase(next);
     } while (! (base == start));
 
+    // oops, it repeats
+    (void) hull.pop_back();
 
 
     return hull;

@@ -11,7 +11,10 @@
 using namespace std;
 const double TAU = 6.28318530718;
 
-void draw(int width, int height, vector<spoint> points, vector<spoint> allpoints)
+void draw(int width, int height,
+        vector<spoint> &hull,
+        vector<spoint> &inpoints,
+        vector<spoint> &expoints)
 {
   cairo_surface_t *surface;
   cairo_t *cr;
@@ -27,29 +30,21 @@ void draw(int width, int height, vector<spoint> points, vector<spoint> allpoints
   */
 
   // Set up scale properly
-  scale_world(cr, 1.4, width, height, points);
-
-  /*
-  double x, y;
-  x = 0; y = 0;
-  cairo_user_to_device(cr, &x, &y);
-  cerr << "Point 0,0 maps to ("<<x<<", "<<y<<")" << endl;
-  x = 1; y = 1;
-  cairo_user_to_device(cr, &x, &y);
-  cerr << "Point 1,1 maps to ("<<x<<", "<<y<<")" << endl;
-  */
+  scale_world(cr, 1.4, width, height, hull);
 
   // Actual code call
   //
   cairo_set_line_width(cr, 0.01);
-  draw_with_lines(cr, points);
+  draw_with_lines(cr, hull);
 
-  draw_points(cr, allpoints, 0.05);
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
-  draw_with_smoothed_lines(cr, points);
+  draw_with_smoothed_lines(cr, hull);
+  draw_points(cr, inpoints, 0.05);
 
+  cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.6);
+  draw_points(cr, expoints, 0.05);
   // End actual code
 
   cairo_surface_write_to_png(surface, "image.png");
@@ -108,6 +103,63 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
 }
 
 void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
+{
+    cairo_new_path(cr);
+    const double radius = 0.1;
+
+    double previous_angle = 0;
+
+    // TODO draw from last to first
+
+    for(size_t i = 0; i < points.size()+2; i++) {
+        spoint a = points[i % points.size()];
+        spoint b = points[(i + 1) % points.size()];
+
+        double dx = b.x - a.x;
+        double dy = b.y - a.y;
+
+        double angle = atan2(dy, dx);
+        angle +=  TAU / 4;
+
+        double delta_angle = -previous_angle + angle;
+        while(delta_angle < 0) { delta_angle += TAU; }
+        while(delta_angle > TAU) { delta_angle -= TAU; }
+
+        cerr << "Drawing line from (" << a.x << ", " << a.y
+            << ") to (" << b.x << ", " << b.y << ")" << endl;
+        cerr << "    " << "Angle: " << angle / TAU * 360 << endl;
+        cerr << "    " << "Delta: " << delta_angle / TAU  * 360<< endl;
+        if(i == 0) {
+            //cairo_arc(cr, a.x, a.y, radius,
+                    //angle, angle);
+        } else if (a.inblob) {
+            if(delta_angle < TAU / 2) {
+
+                double midangle = (angle + previous_angle) / 2;
+                cairo_arc(cr, a.x, a.y, radius,
+                        midangle,midangle);
+            } else {
+                cairo_arc_negative(cr, a.x, a.y, radius,
+                        //        angle, previous_angle);
+                    previous_angle, angle);
+            }
+        } else {
+
+            if(delta_angle < TAU / 2) {
+                cairo_arc(cr, a.x, a.y, radius,
+                        previous_angle + TAU/2, angle + TAU/2);
+            } else {
+                double midangle = (angle + previous_angle) / 2 + TAU/2;
+                cairo_arc(cr, a.x, a.y, radius,
+                        midangle,midangle);
+            }
+        }
+
+        previous_angle = angle;
+    }
+    cairo_stroke(cr);
+}
+void draw_with_smoothed_lines_counterclockwise(cairo_t *cr, const vector<spoint> &points)
 {
     cairo_new_path(cr);
     const double radius = 0.1;

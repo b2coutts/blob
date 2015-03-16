@@ -8,7 +8,10 @@
 #include <cairo.h>
 
 
-void draw(int width, int height, std::vector<spoint> points, std::vector<spoint> allpoints);
+void draw(int width, int height,
+        std::vector<spoint> &hull,
+        std::vector<spoint> &inpoints,
+        std::vector<spoint> &expoints);
 void scale_world(cairo_t * cr,
         double boundry,
         double width, double height,

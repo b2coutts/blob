@@ -22,5 +22,5 @@ int main() {
     for(auto& p : points) {
         cerr << "  (" << p.x << ", " << p.y << ")" << endl;
     }
-    draw(400, 400, points, p.first);
+    draw(400, 400, points, p.first, p.second);
 }
