@@ -301,7 +301,7 @@ bool Triangle::contains(const spoint& p) const
     float w = (d00 * d21 - d01 * d20) * invDenom;
     float u = 1.0f - v - w;
 
-    const float radius = 0.1;
+    const float radius = 0.2;
 
     // We can give this fudge factor easily.
     bool contained = ( v > 0 && w > 0 && u > 0 &&
