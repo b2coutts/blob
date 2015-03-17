@@ -16,11 +16,14 @@ int main() {
     auto p = read_points(file);
     file.close();
 
+    cerr << endl << endl;
     points = find_hull(p.first, p.second);
 
+    /*
     cerr << "Points:" << endl;
     for(auto& p : points) {
-        cerr << "  (" << p.x << ", " << p.y << ")" << endl;
+        cerr << "  " << p << endl;
     }
+    */
     draw(400, 400, points, p.first, p.second);
 }

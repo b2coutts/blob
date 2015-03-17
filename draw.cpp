@@ -95,7 +95,7 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
 {
     cairo_new_path(cr);
     for(auto& s : points) {
-        cerr << "Drawing point " << s.x << " " << s.y << endl;
+        cerr << "Drawing point " << s << endl;
         cairo_line_to(cr, s.x, s.y);
     }
     cairo_close_path(cr);
@@ -125,8 +125,7 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
         while(delta_angle < 0) { delta_angle += TAU; }
         while(delta_angle > TAU) { delta_angle -= TAU; }
 
-        cerr << "Drawing line from (" << a.x << ", " << a.y
-            << ") to (" << b.x << ", " << b.y << ")" << endl;
+        cerr << "Drawing line from " << a << " to " << b << endl;
         cerr << "    " << "Angle: " << angle / TAU * 360 << endl;
         cerr << "    " << "Delta: " << delta_angle / TAU  * 360<< endl;
         if(i == 0) {
@@ -182,8 +181,7 @@ void draw_with_smoothed_lines_counterclockwise(cairo_t *cr, const vector<spoint>
         while(delta_angle < 0) { delta_angle += TAU; }
         while(delta_angle > TAU) { delta_angle -= TAU; }
 
-        cerr << "Drawing line from (" << a.x << ", " << a.y
-            << ") to (" << b.x << ", " << b.y << ")" << endl;
+        cerr << "Drawing line from " << a << " to " << b << endl;
         cerr << "    " << "Angle: " << angle / TAU * 360 << endl;
         cerr << "    " << "Delta: " << delta_angle / TAU  * 360<< endl;
         if(i == 0) {

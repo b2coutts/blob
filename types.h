@@ -1,5 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
+#include <ostream>
 
 struct spoint {
     spoint(double x, double y, bool inblob) :
@@ -13,5 +14,7 @@ struct spoint {
 inline bool operator==(const spoint &l, const spoint &r) {
     return l.x == r.x && l.y == r.y && l.inblob == r.inblob;
 }
+
+std::ostream& operator<<(std::ostream& out, const spoint& p);
 
 #endif
