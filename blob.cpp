@@ -37,54 +37,18 @@ vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
     center.x /= hull.size();
     center.y /= hull.size();
 
+    // This location of center is just a guess, should work anywhere.
+    // We could also use a tree for center, if we tessellate properly,
+    // and transverse it clockwise; this might improve the blob placement,
+    // but is not required as long as hull is convex.
+    // It will really improve cases where the angle subtended by
+    // two points is small from the center's perspective.
+
+    // Just to show it visually, TODO remove
     included.push_back(center);
 
-    list<Triangle> triangles;
 
-    for(size_t i_ = 0; i_ < hull.size(); i_++) {
-        size_t i = i_ % hull.size();
-        size_t j = (i + 1) % hull.size();
-
-        triangles.emplace_back(center, hull[i], hull[j]);
-    }
-
-    // list<spoint> ex_list(excluded.begin(), excluded.end());
-
-    cerr << "Center: " << center << endl;
-    for(auto& e : excluded) {
-        auto trit = triangles.begin();
-
-        while(trit != triangles.end()) {
-            if(trit->contains(e)) {
-                cerr << "Excluded point " << e << " contained in triangle" << endl;
-                cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
-                Triangle before(center, trit->b, e);
-                Triangle after (center, e, trit->c);
-                // cerr << "Before " << before.a << ", " << before.b << ", " << before.c << endl;
-                // cerr << "After  " << after.a << ", " << after.b << ", " << after.c << endl;
-                trit = triangles.erase(trit);
-                // Inserting before the one after trit
-                // Reverse order, since before will end up before after then.
-                trit = triangles.insert(trit, after);
-                trit = triangles.insert(trit, before);
-                /*
-                cerr << "*** Inserting" << endl;
-                cerr << "    " << trit->a << ", " << trit->b << ", " << trit->c << endl;
-                trit++;
-                cerr << "    " << trit->a << ", " << trit->b << ", " << trit->c << endl;
-
-                trit++;
-                cerr << "    " << trit->a << ", " << trit->b << ", " << trit->c << endl;
-                */
-
-                break;
-            }
-
-            trit++;
-        }
-
-    }
-
+    list<Triangle> triangles = starburst_fix(center, hull, included, excluded);
     hull.clear();
     for(auto& tri : triangles) {
         hull.push_back(tri.b);
@@ -100,6 +64,80 @@ vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
     */
 
     return hull;
+}
+
+list<Triangle> subdivide_triangle(const Triangle& tri, const spoint& e,
+        list<spoint>& interior)
+{
+    Triangle now_outside(e, tri.b, tri.c);
+    for(auto intit = interior.begin(); intit != interior.end(); intit++) {
+        auto ico = now_outside.coords(*intit);
+        if(ico.u >= 0 && ico.v >= 0 && ico.w >= 0) {
+            cerr << "Whoops, excluded some point on the interior"
+                << endl << "   " << *intit << endl;
+        }
+    }
+    Triangle before(tri.a, tri.b, e);
+    Triangle after (tri.a, e, tri.c);
+    return {before, after};
+}
+
+list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>& included, vector<spoint>& excluded)
+{
+    list<Triangle> triangles;
+
+    for(size_t i_ = 0; i_ < hull.size(); i_++) {
+        size_t i = i_ % hull.size();
+        size_t j = (i + 1) % hull.size();
+
+        triangles.emplace_back(center, hull[i], hull[j]);
+    }
+
+    list<spoint> interior(included.begin(), included.end());
+
+    // Slow :(
+    for(auto& p : hull) {
+        interior.remove(p);
+    }
+    list<spoint> excluded_list(excluded.begin(), excluded.end());
+    // Filter bounding box
+
+
+
+    cerr << "Center: " << center << endl;
+    for(auto eit = excluded_list.begin(); eit!= excluded_list.end(); eit++) {
+        spoint &e = *eit;
+        auto trit = triangles.begin();
+
+        while(trit != triangles.end()) {
+            Triangle::bcoords co = trit->coords(e);
+            const float radius_fudge = 0.2;
+            if(co.u >= 0 && co.v >= 0  && co.w >= 0) {
+                cerr << "Excluded point " << e << " contained in triangle" << endl;
+                cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
+                Triangle tri = *trit;
+                trit = triangles.erase(trit);
+                triangles.splice(trit, subdivide_triangle(tri, e, interior));
+
+                eit = excluded_list.erase(eit);
+                break;
+            } else if (co.u + radius_fudge >= 0 && co.v >= 0 && co.w >= 0) {
+                cerr << "Excluded point " << e << " close to triangle" << endl;
+                cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
+                // TODO better logic?
+                Triangle tri = *trit;
+                trit = triangles.erase(trit);
+                triangles.splice(trit, subdivide_triangle(tri, e, interior));
+
+                eit = excluded_list.erase(eit);
+                break;
+
+            }
+            trit++;
+        }
+        if (eit == excluded_list.end()) { break; }
+    }
+    return triangles;
 }
 
 vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
@@ -290,16 +328,27 @@ Triangle::Triangle(const spoint& a, const spoint& b, const spoint& c) :
     invDenom(1/(d00 * d11 - d01 * d01))
 {}
 
-bool Triangle::contains(const spoint& p) const
+Triangle::bcoords Triangle::coords(const spoint& p) const
 {
     float v2x = p.x - a.x;
     float v2y = p.y - a.y;
 
     float d20 = v2x * v0x + v2y * v0y; // Dot(v2, v0);
     float d21 = v2x * v1x + v2y * v1y; // Dot(v2, v1);
-    float v = (d11 * d20 - d01 * d21) * invDenom;
-    float w = (d00 * d21 - d01 * d20) * invDenom;
-    float u = 1.0f - v - w;
+    bcoords co;
+    co.v = (d11 * d20 - d01 * d21) * invDenom;
+    co.w = (d00 * d21 - d01 * d20) * invDenom;
+    co.u = 1.0f - co.v - co.w;
+    return co;
+}
+
+bool Triangle::contains(const spoint& p) const
+{
+
+    bcoords co = coords(p);
+    float u = co.u;
+    float v = co.v;
+    float w = co.w;
 
     const float radius = 0.2;
 
