@@ -17,7 +17,9 @@ struct Triangle {
     // u <=> a,
     bool contains(const spoint& p) const;
     bcoords coords(const spoint& p) const;
-    private:
+    std::list<Triangle> shatter(const spoint& p) const;
+private:
+
     const float v0x;
     const float v0y;
     const float v1x;

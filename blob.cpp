@@ -28,6 +28,7 @@ vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
     center.x = 0;
     center.y = 0;
     center.inblob = true; // Not that it should come up.
+    center.boundary = false; // Definitely the case, stuff breaks otherwise.
 
     for(auto& i : hull) {
         center.x += i.x;
@@ -95,11 +96,19 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
 
     list<spoint> interior(included.begin(), included.end());
 
-    // Slow :(
+    // Make sure we are only checking the points that are not in the
+    // boundary, since the other ones will be exactly on the edge of
+    // the triangles.
     for(auto& p : hull) {
         interior.remove(p);
     }
+    for(spoint& p : interior) {
+        assert(p.boundary == false);
+    }
     list<spoint> excluded_list(excluded.begin(), excluded.end());
+    for(spoint& p : excluded_list) {
+        assert(p.boundary == false);
+    }
     // Filter bounding box
 
 
@@ -119,6 +128,7 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
             Triangle::bcoords co = trit->coords(e);
             const float radius_fudge = 0.2;
             if(co.u >= 0 && co.v >= 0  && co.w >= 0) {
+                e.boundary = true;
                 cerr << "Excluded point " << e << " contained in triangle" << endl;
                 cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
                 Triangle tri = *trit;
@@ -134,6 +144,7 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
                 cerr << endl;
                 break;
             } else if (co.u + radius_fudge >= 0 && co.v >= 0 && co.w >= 0) {
+                e.boundary = true;
                 cerr << "Excluded point " << e << " close to triangle" << endl;
                 cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
                 // TODO better logic?
@@ -268,6 +279,9 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
     // oops, it repeats
     (void) hull.pop_back();
 
+    for(spoint& p : hull) {
+        p.boundary = true;
+    }
 
     return hull;
 }
@@ -397,5 +411,28 @@ ostream& operator<<(ostream& out, const spoint& p) {
     } else {
         out << "<" << p.x << ", " << p.y << ">";
     }
+    if(p.boundary) {
+        out << "b";
+    } else {
+        out << "_";
+    }
     return out;
+}
+
+
+/*  Ideas for the triangle
+ *
+ *  Sorta want a generic add/remove a triangle
+ *  Also want a method to "shatter" a triangle at a point,
+ *  returning a list of three triangles, which I can splice into
+ *  the triangle list.
+ *  I would like to be able to tell if a triangle is a interior
+ *  triangle, or an exterior triangle.  I've thought
+ *  about looking at the inblobness of it's vertices, but
+ *  that doesn't work.  I think I could tell if I had a bit
+ *  for each vertex saying if it's fully within the interior of the blob.
+ *
+ */
+list<Triangle> Triangle::shatter(const spoint& p) const {
+    return { Triangle(a,b,p), Triangle(a,p,c), Triangle(p,b,c) };
 }
