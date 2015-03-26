@@ -27,5 +27,7 @@ read_points(istream& in) {
         in >> x >> y;
         excluded.emplace_back(x, y, false);
     }
-    return make_tuple(included, excluded);
+
+    pair<vector<spoint>, vector<spoint> > ret (included, excluded);
+    return ret;
 }
