@@ -48,6 +48,6 @@ vec2d scale(double scalar, vec2d v);
 double dist(vec2d u, vec2d v);
 
 // converts a spoint to a vec2d
-vec2d spoint_to_vec2d(spoint p);
+vec2d stv(spoint p);
 
 #endif

@@ -29,6 +29,6 @@ double dist(vec2d u, vec2d v){
     return norm(u-v);
 }
 
-vec2d spoint_to_vec2d(spoint p){
+vec2d stv(spoint p){
     return {p.x, p.y};
 }

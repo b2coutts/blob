@@ -73,8 +73,8 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
 // around a and b. a and b lie near a line l of the polygon; v is the normal
 // vector to that line pointing out of the polygon
 pair<vec2d,vec2d> smooth_line(spoint sa, spoint sb, vec2d v){
-    vec2d a = spoint_to_vec2d(sa);
-    vec2d b = spoint_to_vec2d(sb);
+    vec2d a = stv(sa);
+    vec2d b = stv(sb);
     vec2d u = b - a;
     double nrm = norm(u);
     vec2d w = scale(1.0/nrm, u); // normalized u
