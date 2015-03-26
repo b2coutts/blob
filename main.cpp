@@ -10,7 +10,7 @@ using namespace std;
 pair<vector<spoint>, vector<spoint> > read_points(istream& in);
 
 // flag; if true, use the b2 (chunking) codepath, otherwise use starburst
-#define B2 false
+#define B2 true
 
 int main() {
     ifstream file;
