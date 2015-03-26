@@ -105,9 +105,15 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
 
 
     cerr << "Center: " << center << endl;
-    for(auto eit = excluded_list.begin(); eit!= excluded_list.end(); eit++) {
+    for(auto eit = excluded_list.begin(); eit!= excluded_list.end();) {
         spoint &e = *eit;
+        cerr << "Considering point " << e << endl;
+        if(abs(e.x) < 0.1 && abs(e.y) < 0.1) {
+            cerr << "Excluded point " << e << " near the center" << endl;
+        }
         auto trit = triangles.begin();
+
+        bool point_removed = false;
 
         while(trit != triangles.end()) {
             Triangle::bcoords co = trit->coords(e);
@@ -120,6 +126,12 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
                 triangles.splice(trit, subdivide_triangle(tri, e, interior));
 
                 eit = excluded_list.erase(eit);
+                point_removed = true;
+                cerr << "After erasing, points left are:" << endl << "    ";
+                for(auto& e : excluded_list) {
+                    cerr << e;
+                }
+                cerr << endl;
                 break;
             } else if (co.u + radius_fudge >= 0 && co.v >= 0 && co.w >= 0) {
                 cerr << "Excluded point " << e << " close to triangle" << endl;
@@ -130,12 +142,21 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
                 triangles.splice(trit, subdivide_triangle(tri, e, interior));
 
                 eit = excluded_list.erase(eit);
+                point_removed = true;
+                cerr << "After erasing, points left are:" << endl << "    ";
+                for(auto& e : excluded_list) {
+                    cerr << e;
+                }
+                cerr << endl;
                 break;
 
             }
             trit++;
         }
         if (eit == excluded_list.end()) { break; }
+        if (!point_removed) {
+            eit++;
+        }
     }
     return triangles;
 }
