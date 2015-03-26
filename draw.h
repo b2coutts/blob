@@ -19,5 +19,6 @@ void scale_world(cairo_t * cr,
 void draw_points(cairo_t *cr, const std::vector<spoint> &points, const double radius);
 void draw_with_lines(cairo_t *cr, const std::vector<spoint> &points);
 void draw_with_smoothed_lines(cairo_t *cr, const std::vector<spoint> &points);
+void draw_axis(cairo_t * cr);
 
 #endif

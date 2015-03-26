@@ -45,7 +45,12 @@ void draw(int width, int height,
 
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.6);
   draw_points(cr, expoints, 0.05);
+
+  cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
+  draw_axis(cr);
+
   // End actual code
+
 
   cairo_surface_write_to_png(surface, "image.png");
 
@@ -221,4 +226,14 @@ void draw_points(cairo_t *cr, const std::vector<spoint> &points, const double ra
         cairo_arc(cr, s.x, s.y, radius, 0, TAU);
         cairo_stroke(cr);
     }
+}
+void draw_axis(cairo_t *cr) {
+    cairo_new_path(cr);
+    cairo_line_to(cr, 10,0);
+    cairo_line_to(cr, -10,0);
+    cairo_stroke(cr);
+    cairo_new_path(cr);
+    cairo_line_to(cr, 0,10);
+    cairo_line_to(cr, 0,-10);
+    cairo_stroke(cr);
 }
