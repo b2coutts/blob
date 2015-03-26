@@ -17,9 +17,7 @@ struct Triangle {
     // u <=> a,
     bool contains(const spoint& p) const;
     bcoords coords(const spoint& p) const;
-    std::list<Triangle> shatter(const spoint& p) const;
-private:
-
+    private:
     const float v0x;
     const float v0y;
     const float v1x;
@@ -41,7 +39,7 @@ starburst_fix(spoint center,
               std::vector<spoint>& excluded);
 
 bool
-point_inside(const spoint &p, const std::vector<spoint> &points);
+point_inside(const spoint &p, const std::list<spoint> &points);
 
 bool point_inside_triangle(
         const spoint& p,
@@ -49,5 +47,6 @@ bool point_inside_triangle(
         const spoint& b,
         const spoint& c);
 
+std::list<spoint> giftwrap(std::vector<spoint> &included, std::vector<spoint> &excluded);
 
 #endif

@@ -9,11 +9,13 @@ LDLIBS=$(shell pkg-config --libs cairo)
 CC=${CXX}
 
 
-draw : draw.o main.o input.o blob.o
+draw : draw.o main.o input.o blob.o b2.o vec2d.o
 
 blob.o : types.h blob.h
 draw.o : types.h draw.h
 main.o : types.h draw.h blob.h
+vec2d.o : vec2d.h
+b2.o : types.h vec2d.h b2.h
 
 
 

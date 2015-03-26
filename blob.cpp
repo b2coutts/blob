@@ -13,7 +13,6 @@
 
 using namespace std;
 
-vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded);
 const double TAU = 6.28318530718;
 
 const double EPSILON = 0.001;
@@ -21,14 +20,14 @@ const double EPSILON = 0.001;
 
 vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
 {
-    vector<spoint> hull = giftwrap(included, excluded);
+    list<spoint> tmp = giftwrap(included, excluded);
+    vector<spoint> hull {tmp.begin(), tmp.end()};
 
 
     spoint center;
     center.x = 0;
     center.y = 0;
     center.inblob = true; // Not that it should come up.
-    center.boundary = false; // Definitely the case, stuff breaks otherwise.
 
     for(auto& i : hull) {
         center.x += i.x;
@@ -96,19 +95,11 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
 
     list<spoint> interior(included.begin(), included.end());
 
-    // Make sure we are only checking the points that are not in the
-    // boundary, since the other ones will be exactly on the edge of
-    // the triangles.
+    // Slow :(
     for(auto& p : hull) {
         interior.remove(p);
     }
-    for(spoint& p : interior) {
-        assert(p.boundary == false);
-    }
     list<spoint> excluded_list(excluded.begin(), excluded.end());
-    for(spoint& p : excluded_list) {
-        assert(p.boundary == false);
-    }
     // Filter bounding box
 
 
@@ -128,7 +119,6 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
             Triangle::bcoords co = trit->coords(e);
             const float radius_fudge = 0.2;
             if(co.u >= 0 && co.v >= 0  && co.w >= 0) {
-                e.boundary = true;
                 cerr << "Excluded point " << e << " contained in triangle" << endl;
                 cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
                 Triangle tri = *trit;
@@ -144,7 +134,6 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
                 cerr << endl;
                 break;
             } else if (co.u + radius_fudge >= 0 && co.v >= 0 && co.w >= 0) {
-                e.boundary = true;
                 cerr << "Excluded point " << e << " close to triangle" << endl;
                 cerr << "  " << trit->a << ", " << trit->b << ", " << trit->c << endl;
                 // TODO better logic?
@@ -172,14 +161,13 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
     return triangles;
 }
 
-vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
+list<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
     // http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
     list<spoint> inc(included.begin(), included.end());
     double leftmost = numeric_limits<double>::max();
     int leftmost_index = -1;
 
-    vector<spoint> hull;
-    hull.reserve(inc.size());
+    list<spoint> hull;
     // Find a point surely on the convex hull
     list<spoint>::const_iterator leftmost_iter = inc.begin();
     for(auto it = inc.begin(); it != inc.end(); it++) {
@@ -279,21 +267,18 @@ vector<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
     // oops, it repeats
     (void) hull.pop_back();
 
-    for(spoint& p : hull) {
-        p.boundary = true;
-    }
 
     return hull;
 }
 
 bool
-point_inside(const spoint &p, const std::vector<spoint> &points)
+point_inside(const spoint &p, const list<spoint> &points)
 {
     bool inside = false;
-    spoint e0 = points[points.size() - 1];
+    spoint e0 = points.back();
     bool y0 = (e0.y > p.y);
-    for(int i = 0; i < points.size(); i++) {
-        spoint e1 = points[i];
+    for(auto i = points.begin(); i != points.end(); i++) {
+        spoint e1 = *i;
         bool y1 = (e1.y > p.y);
         if(y0 != y1) {
             // Mybe re-read http://www.ecse.rpi.edu/~wrf/Research/Short_Notes/pnpoly.html
@@ -303,9 +288,9 @@ point_inside(const spoint &p, const std::vector<spoint> &points)
             bool t2 = (p.x < ((e1.x-e0.x) * (p.y-e0.y) / (e1.y-e0.y)) + e0.x);
             if( t2 ) {
                 inside = !inside;
-                cerr << "Flipping inside to " << inside << endl;
-                cerr << "  On iteration " << i << endl;
-                cerr << "  Comparing points " << e0 << " and " << e1 << endl;
+                // cerr << "Flipping inside to " << inside << endl;
+                // cerr << "  On iteration " << i << endl;
+                // cerr << "  Comparing points " << e0 << " and " << e1 << endl;
             }
         }
         e0 = e1;
@@ -411,28 +396,5 @@ ostream& operator<<(ostream& out, const spoint& p) {
     } else {
         out << "<" << p.x << ", " << p.y << ">";
     }
-    if(p.boundary) {
-        out << "b";
-    } else {
-        out << "_";
-    }
     return out;
-}
-
-
-/*  Ideas for the triangle
- *
- *  Sorta want a generic add/remove a triangle
- *  Also want a method to "shatter" a triangle at a point,
- *  returning a list of three triangles, which I can splice into
- *  the triangle list.
- *  I would like to be able to tell if a triangle is a interior
- *  triangle, or an exterior triangle.  I've thought
- *  about looking at the inblobness of it's vertices, but
- *  that doesn't work.  I think I could tell if I had a bit
- *  for each vertex saying if it's fully within the interior of the blob.
- *
- */
-list<Triangle> Triangle::shatter(const spoint& p) const {
-    return { Triangle(a,b,p), Triangle(a,p,c), Triangle(p,b,c) };
 }

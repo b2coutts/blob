@@ -1,0 +1,2 @@
+- iterate over points in b2.cpp:fixed_hull more intelligently
+- precompute distances between each pair of points
