@@ -1,4 +1,6 @@
 #include "draw.h"
+#include "vec2d.h"
+#include "b2.h"
 
 #include <vector>
 #include <iostream>
@@ -10,6 +12,7 @@
 
 using namespace std;
 const double TAU = 6.28318530718;
+#define PI 3.14159265358979323846
 
 void draw(int width, int height,
         vector<spoint> &hull,
@@ -30,7 +33,7 @@ void draw(int width, int height,
   */
 
   // Set up scale properly
-  scale_world(cr, 1.4, width, height, hull);
+  scale_world(cr, 2.0, width, height, hull);
 
   // Actual code call
   //
@@ -40,7 +43,7 @@ void draw(int width, int height,
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
-  draw_with_smoothed_lines(cr, hull);
+  draw_with_smoothed_lines(cr, hull, inpoints, expoints);
   draw_points(cr, inpoints, 0.05);
 
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.6);
@@ -94,6 +97,9 @@ void scale_world(cairo_t * cr,
   cairo_translate(cr,
           -minx * ((boundry-1.0) / 2 + 1),
           -maxy * ((boundry-1.0) / 2 + 1));
+
+    // TODO: remove this line; used for a particular debug case
+    cairo_translate(cr, 0.3, -0.6);
 }
 
 void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
@@ -107,59 +113,66 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
     cairo_stroke(cr);
 }
 
-void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
+void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
+                             vector<spoint> &inpoints, vector<spoint> &expoints)
 {
     cairo_new_path(cr);
-    const double radius = 0.1;
 
-    double previous_angle = 0;
+    // calculate the radius of each vertex
+    vector<double> radii(points.size());
+    for(int i = 0; i < points.size(); i++){
+        radii[i] = numeric_limits<double>::max();
+        for(auto &x : (points[i].inblob ? expoints : inpoints)){
+            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
+        }
+        radii[i] /= 2.0;
+    }
+
+    // TODO: remove this convenient macro
+    #define deg(x) (x*360 / TAU)
+
+    // TODO: assumes clockwise convex hull (for last arg)
+    double previous_angle;
+    pair<double,double> dpair = smooth_line_angle(points.back(),
+            *(points.begin()), radii[points.size()-1], radii[0]);
+            //rotccw(stv(*(points.begin())) - stv(points.back()) , PI/2));
+    previous_angle = dpair.second;
 
     // TODO draw from last to first
 
-    for(size_t i = 0; i < points.size()+2; i++) {
+        cout << "cairo_arc(cr, a.x, a.y, a_rad, previous_angle, theta)" << endl;
+    for(size_t i = 0; i < points.size(); i++) {
         spoint a = points[i % points.size()];
         spoint b = points[(i + 1) % points.size()];
 
-        double dx = b.x - a.x;
-        double dy = b.y - a.y;
+        double a_rad = radii[i % points.size()];
+        double b_rad = radii[(i+1) % points.size()];
 
-        double angle = atan2(dy, dx);
-        angle +=  TAU / 4;
+        cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
+             << ", " << ") = ";
+        dpair = smooth_line_angle(a, b, a_rad, b_rad);
+        cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
+            //rotccw(stv(*(points.begin())) - stv(points.back()) , PI/2));
 
-        double delta_angle = -previous_angle + angle;
-        while(delta_angle < 0) { delta_angle += TAU; }
-        while(delta_angle > TAU) { delta_angle -= TAU; }
-
-        cerr << "Drawing line from " << a << " to " << b << endl;
-        cerr << "    " << "Angle: " << angle / TAU * 360 << endl;
-        cerr << "    " << "Delta: " << delta_angle / TAU  * 360<< endl;
-        if(i == 0) {
-            //cairo_arc(cr, a.x, a.y, radius,
-                    //angle, angle);
-        } else if (a.inblob) {
-            if(delta_angle < TAU / 2) {
-
-                double midangle = (angle + previous_angle) / 2;
-                cairo_arc(cr, a.x, a.y, radius,
-                        midangle,midangle);
-            } else {
-                cairo_arc_negative(cr, a.x, a.y, radius,
-                        //        angle, previous_angle);
-                    previous_angle, angle);
-            }
-        } else {
-
-            if(delta_angle < TAU / 2) {
-                cairo_arc(cr, a.x, a.y, radius,
-                        previous_angle + TAU/2, angle + TAU/2);
-            } else {
-                double midangle = (angle + previous_angle) / 2 + TAU/2;
-                cairo_arc(cr, a.x, a.y, radius,
-                        midangle,midangle);
-            }
+        if(a.inblob && b.inblob){
+            cout << "NEG(" << a.x << "," << a.y << "," << a_rad << ","
+                 << b_rad << "," << deg(previous_angle) << "," << deg(dpair.first) << endl;
+            cairo_arc_negative(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
+        }else if(a.inblob && !b.inblob){
+            cout << "NEG(" << a.x << "," << a.y << "," << a_rad << ","
+                 << b_rad << "," << deg(previous_angle) << "," << deg(dpair.first) << endl;
+            cairo_arc_negative(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
+        }else if(!a.inblob && b.inblob){
+            cout << "arc(" << a.x << "," << a.y << "," << a_rad << ","
+                 << deg(previous_angle) << "," << deg(dpair.first) << endl;
+            cairo_arc(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
+        }else{
+            cout << "arc(" << a.x << "," << a.y << "," << a_rad << ","
+                 << deg(previous_angle) << "," << deg(dpair.first) << endl;
+            cairo_arc(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
         }
 
-        previous_angle = angle;
+        previous_angle = dpair.second;
     }
     cairo_stroke(cr);
 }

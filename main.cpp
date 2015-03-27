@@ -51,5 +51,5 @@ int main() {
         cerr << "  " << p << endl;
     }
     */
-    draw(400, 400, points, p.first, p.second);
+    draw(600, 600, points, p.first, p.second);
 }

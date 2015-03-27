@@ -94,9 +94,16 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
     vec2d nrml = rotccw(dir, PI/2); // TODO: requires that &poly is clockwise
     vector<spoint> pts;
     for(int i = 0; i < inc.size(); i++){
+        // TODO: efficiency: maybe filter out vertices instead of checking each time
+        bool inpoly = false;
+        for(auto &pt : poly){
+            if(pt == inc[i]) inpoly = true;
+        }
+
         // TODO: we can adjust these thresholds (in particular the dist
         // thresholds) to make it look nicer
-        if(inner(nrml, a-stv(inc[i])) < incdists[i] &&
+        if(!inpoly &&
+           inner(nrml, a-stv(inc[i])) < incdists[i] &&
            inner(nrml, a-stv(inc[i])) > 0 &&
            inner(dir, stv(inc[i])-a) > 0 &&
            inner(dir, b-stv(inc[i])) > 0){
@@ -105,9 +112,15 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
     }
 
     for(int i = 0; i < exc.size(); i++){
+        bool inpoly = false;
+        for(auto &pt : poly){
+            if(pt == exc[i]) inpoly = true;
+        }
+
         // TODO: we can adjust these thresholds (in particular the dist
         // thresholds) to make it look nicer
-        if(inner(nrml, stv(exc[i])-a) < excdists[i] &&
+        if(!inpoly &&
+           inner(nrml, stv(exc[i])-a) < excdists[i] &&
            inner(nrml, stv(exc[i])-a) > 0 &&
            inner(dir, stv(exc[i])-a) > 0 &&
            inner(dir, b-stv(exc[i])) > 0){
@@ -121,6 +134,16 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
     sort(pts.begin(), pts.end(), inner_cmp);
     for(int i = 0; i < pts.size(); i++){
         list<spoint>::iterator iter = poly.insert(ib, pts[i]);
+        
+        // TODO: remove these lines
+        list<spoint>::iterator prev, next;
+        prev = next = iter;
+        --prev; ++next;
+        cout << "inserted " << *iter << " between " << *prev << " and " << *next
+            << endl;
+        for(auto &pt : poly){
+            if(pt == *iter) cout << "MATCH: " << pt << endl;
+        }
         // TODO: double-check that this actually works
         refine_line(poly, iter, ib, inc, exc, incdists, excdists);
     }
@@ -134,6 +157,7 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     double *incdists = new double[inc.size()];
     double *excdists = new double[exc.size()];
     double min;
+
     for(int i = 0; i < inc.size(); i++){
         min = numeric_limits<double>::max();
         for(int j = 0; j < exc.size(); j++){
@@ -167,22 +191,37 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
 // TODO: replace with a smart radius function
 #define radius(x) (0.001)
 
-// returns the endpoints of a smooth line between the borders of the circles
-// around a and b. a and b lie near a line l of the polygon; v is the normal
-// vector to that line pointing out of the polygon
-pair<vec2d,vec2d> smooth_line(spoint sa, spoint sb, vec2d v){
+// normalizes an angle to be within [0,2*PI)
+double normalize(double theta){
+    while(theta < 0) theta += 2*PI;
+    while(theta >= 2*PI) theta-= 2*PI;
+    return theta;
+}
+
+// for consecutive points sa,sb, with radii ra,rb, (with outward normal vector
+// v), calculates the angles (from sa,sb repsectively) at which to draw a
+// smooth line from the circle around sa to the circle around sb
+pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb){
     vec2d a = stv(sa);
     vec2d b = stv(sb);
     vec2d u = b - a;
     double nrm = norm(u);
     vec2d w = scale(1.0/nrm, u); // normalized u
-    double delta = (radius(a) + radius(b))/nrm;
-    if(sa.inblob != sb.inblob) delta = (radius(a) - radius(b))/nrm;
+    double delta = (ra - rb)/nrm;
+    if(sa.inblob != sb.inblob) delta = (ra + rb)/nrm;
+
+    vec2d v = rotccw(b-a, PI/2);
+
+    cout << "(CALC u = " << u.x << "," << u.y << ")";
     
     // calculate normal vector to line. Recalculate if the line is on the wrong
     // side of the circles
-    vec2d c = rotccw(w, acos(delta));
-    if(inner(c,v) < 0) c = rotccw(w, acos(-delta));
+    vec2d c;
+    if(sa.inblob)  c = rotccw(w, acos(delta));
+    else            c = rotccw(w, 2*PI - acos(delta));
+    cout << "(CALC c = " << c.x << "," << c.y << ")";
 
-    return {a + scale(radius(a), c) , b + scale(radius(b), c)};
+    double theta = atan2(c.y,c.x);
+
+    return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
 }
