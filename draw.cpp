@@ -119,13 +119,21 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
     cairo_new_path(cr);
 
     // calculate the radius of each vertex
+    // TODO: should this count *all* points of the same inblob type? Are there
+    // situations where we can decide we don't need to?
     vector<double> radii(points.size());
     for(int i = 0; i < points.size(); i++){
         radii[i] = numeric_limits<double>::max();
-        for(auto &x : (points[i].inblob ? expoints : inpoints)){
+        for(auto &x : inpoints){
+            if(x == points[i]) continue;
             radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
         }
-        radii[i] /= 2.0;
+        for(auto &x : expoints){
+            if(x == points[i]) continue;
+            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
+        }
+        // slightly more than 2 to avoid overlap due to imprecision
+        radii[i] /= 2.01;
     }
 
     // TODO: remove this convenient macro
