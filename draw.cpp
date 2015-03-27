@@ -174,6 +174,7 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
 
         previous_angle = dpair.second;
     }
+    cairo_close_path(cr);
     cairo_stroke(cr);
 }
 void draw_with_smoothed_lines_counterclockwise(cairo_t *cr, const vector<spoint> &points)
