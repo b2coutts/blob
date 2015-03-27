@@ -117,6 +117,17 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
             if(pt == exc[i]) inpoly = true;
         }
 
+        if(exc[i].x == 0 && exc[i].y == -1){
+            cout << "LOL: exc[i] is " << exc[i] << ", with d=" << excdists[i] <<
+                ", a,b are " << *ia << *ib << endl;
+
+            cout << (inner(nrml, stv(exc[i])-a) < excdists[i]) << ", "
+             << (inner(nrml, stv(exc[i])-a) > 0) << ", "
+             << (inner(dir, stv(exc[i])-a) > 0) << ", "
+             << (inner(dir, b-stv(exc[i])) > 0) << endl;
+
+        }
+
         // TODO: we can adjust these thresholds (in particular the dist
         // thresholds) to make it look nicer
         if(!inpoly &&
@@ -180,6 +191,8 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         list<spoint>::iterator next = i; ++next;
         if(next != poly.end()){
             refine_line(poly, i, next, inc, exc, incdists, excdists);
+        }else{
+            refine_line(poly, i, poly.begin(), inc, exc, incdists, excdists);
         }
     }
 
