@@ -17,4 +17,12 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc);
 // vector to that line pointing out of the polygon
 pair<vec2d,vec2d> smooth_line(spoint a, spoint b, vec2d v);
 
+// refine a single line of a given polygon
+void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
+                 list<spoint>::iterator ib, vector<spoint> &inc,
+                 vector<spoint> &exc, double *incdists, double *excdists);
+
+// given a fixed polygon, refine each of its lines
+void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc);
+
 #endif

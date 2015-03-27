@@ -12,6 +12,15 @@ pair<vector<spoint>, vector<spoint> > read_points(istream& in);
 // flag; if true, use the b2 (chunking) codepath, otherwise use starburst
 #define B2 true
 
+// helper function for writing a polygon to stdout
+void print_poly(list<spoint> poly){
+    cout << "Polygon: ";
+    for(auto i = poly.begin(); i != poly.end(); ++i){
+        cout << *i << ", ";
+    }
+    cout << endl;
+}
+
 int main() {
     ifstream file;
     vector<spoint> points;
@@ -26,16 +35,16 @@ int main() {
     if(!B2) points = find_hull(p.first, p.second);
     else{
         list<spoint> fixed = fixed_hull(p.first, p.second);
+
+        cout << "before refine "; print_poly(fixed);
+        
+        refine_poly(fixed, p.first, p.second);
+
+        cout << "after refine "; print_poly(fixed);
+
         vector<spoint> tmp{begin(fixed), end(fixed)};
         points = tmp;
     }
-
-    cout << "Polygon: ";
-    for(int i = 0; i < points.size(); i++){
-        cout << points[i] << ", ";
-    }
-    cout << endl;
-
     /*
     cerr << "Points:" << endl;
     for(auto& p : points) {

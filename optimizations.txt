@@ -1,2 +1,5 @@
+IMPORTANT: code currently assumes that the hull is in clockwise order! (see
+           refine_line)
+
 - iterate over points in b2.cpp:fixed_hull more intelligently
 - precompute distances between each pair of points

@@ -4,6 +4,10 @@
 #include "b2.h"
 
 #include <iostream>
+#include <algorithm>
+#include <limits>
+
+#define PI 3.14159265358979323846
 
 // given a point and a polygon, insert the point between the nearest two
 // vertices. Return an iterator to the inserted point
@@ -65,6 +69,100 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
 
     return hull;
 }
+
+// comparison vector used for below function
+vec2d cmp_vec;
+
+// comparison function; compares by inner product with cmp_vec
+bool inner_cmp(spoint u, spoint v){
+    return inner(cmp_vec, stv(v)-stv(u)) > 0.0;
+}
+
+
+// refine a single line of a given polygon
+// TODO: there's an issue where, if a point is close to two edges, being close
+// to an opposing point across one edge will make its disc small on the other
+// side as well, even though this is undesirable
+void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
+                 list<spoint>::iterator ib, vector<spoint> &inc,
+                 vector<spoint> &exc, double *incdists, double *excdists){
+    vec2d a = stv(*ia);
+    vec2d b = stv(*ib);
+    // direction of boundary line a->b
+    vec2d dir = b - a;
+    // normal vector to dir, pointing outside of poly
+    vec2d nrml = rotccw(dir, PI/2); // TODO: requires that &poly is clockwise
+    vector<spoint> pts;
+    for(int i = 0; i < inc.size(); i++){
+        // TODO: we can adjust these thresholds (in particular the dist
+        // thresholds) to make it look nicer
+        if(inner(nrml, a-stv(inc[i])) < incdists[i] &&
+           inner(nrml, a-stv(inc[i])) > 0 &&
+           inner(dir, stv(inc[i])-a) > 0 &&
+           inner(dir, b-stv(inc[i])) > 0){
+            pts.push_back(inc[i]);
+        }
+    }
+
+    for(int i = 0; i < exc.size(); i++){
+        // TODO: we can adjust these thresholds (in particular the dist
+        // thresholds) to make it look nicer
+        if(inner(nrml, stv(exc[i])-a) < excdists[i] &&
+           inner(nrml, stv(exc[i])-a) > 0 &&
+           inner(dir, stv(exc[i])-a) > 0 &&
+           inner(dir, b-stv(exc[i])) > 0){
+            pts.push_back(exc[i]);
+        }
+    }
+
+    if(pts.empty()) return;
+
+    cmp_vec = dir;
+    sort(pts.begin(), pts.end(), inner_cmp);
+    for(int i = 0; i < pts.size(); i++){
+        list<spoint>::iterator iter = poly.insert(ib, pts[i]);
+        // TODO: double-check that this actually works
+        refine_line(poly, iter, ib, inc, exc, incdists, excdists);
+    }
+}
+
+// given a fixed polygon, refine each of its lines
+void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
+    // calculate minimum distances from each point to a point of opposite
+    // inblob type
+    // TODO: new or other?
+    double *incdists = new double[inc.size()];
+    double *excdists = new double[exc.size()];
+    double min;
+    for(int i = 0; i < inc.size(); i++){
+        min = numeric_limits<double>::max();
+        for(int j = 0; j < exc.size(); j++){
+            double d = dist(inc[i], exc[j]);
+            if(d < min) min = d;
+        }
+        incdists[i] = min;
+    }
+
+    for(int i = 0; i < exc.size(); i++){
+        min = numeric_limits<double>::max();
+        for(int j = 0; j < inc.size(); j++){
+            double d = dist(exc[i], inc[j]);
+            if(d < min) min = d;
+        }
+        excdists[i] = min;
+    }
+
+    for(auto i = poly.begin(); i != poly.end(); ++i){
+        list<spoint>::iterator next = i; ++next;
+        if(next != poly.end()){
+            refine_line(poly, i, next, inc, exc, incdists, excdists);
+        }
+    }
+
+    free(incdists);
+    free(excdists);
+}
+
 
 // TODO: replace with a smart radius function
 #define radius(x) (0.001)
