@@ -9,6 +9,15 @@
 
 #define PI 3.14159265358979323846
 
+// helper function for writing a polygon to stdout
+void print_poly(list<spoint> poly){
+    cout << "Polygon: ";
+    for(auto i = poly.begin(); i != poly.end(); ++i){
+        cout << *i << ", ";
+    }
+    cout << endl;
+}
+
 // given a point and a polygon, insert the point between the nearest two
 // vertices. Return an iterator to the inserted point
 list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){

@@ -12,15 +12,6 @@ pair<vector<spoint>, vector<spoint> > read_points(istream& in);
 // flag; if true, use the b2 (chunking) codepath, otherwise use starburst
 #define B2 true
 
-// helper function for writing a polygon to stdout
-void print_poly(list<spoint> poly){
-    cout << "Polygon: ";
-    for(auto i = poly.begin(); i != poly.end(); ++i){
-        cout << *i << ", ";
-    }
-    cout << endl;
-}
-
 int main(int argc, char *argv[]) {
     if(argc <= 2){
         cerr << "Usage: " << argv[0] << " point_file output_file" << endl;

@@ -9,6 +9,9 @@
 
 using namespace std;
 
+// helper function for writing a polygon to stdout
+void print_poly(list<spoint> poly);
+
 // compute the "fixed" polygon
 list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc);
 
