@@ -35,8 +35,6 @@ int main(int argc, char *argv[]) {
     auto p = read_points(file);
     file.close();
 
-    cerr << endl << endl;
-
     // silly hacks here, but this code will be rewritten anyway
     if(!B2) points = find_hull(p.first, p.second);
     else{
