@@ -22,9 +22,6 @@ void curtime(const char *desc){
     cout << "CPU time (" << desc << "): " << t << " seconds." << endl;
 }
 
-// flag; if true, use the b2 (chunking) codepath, otherwise use starburst
-#define B2 true
-
 int main(int argc, char *argv[]) {
     if(argc <= 2){
         cerr << "Usage: " << argv[0] << " point_file output_file" << endl;
@@ -32,7 +29,6 @@ int main(int argc, char *argv[]) {
     }
 
     ifstream file;
-    vector<spoint> points;
 
     // TODO: do some error-checking wrt the filename
     curtime("begin");
@@ -41,28 +37,16 @@ int main(int argc, char *argv[]) {
     file.close();
     curtime("after read");
 
-    // silly hacks here, but this code will be rewritten anyway
-    if(!B2) points = find_hull(p.first, p.second);
-    else{
-        list<spoint> fixed = fixed_hull(p.first, p.second);
-        curtime("after fixed_hull");
+    list<spoint> fixed = fixed_hull(p.first, p.second);
+    curtime("after fixed_hull");
 
-        cout << "before refine "; print_poly(fixed);
-        
-        refine_poly(fixed, p.first, p.second);
-        curtime("after refine_poly");
+    cout << "before refine "; print_poly(fixed);
+    refine_poly(fixed, p.first, p.second);
+    curtime("after refine_poly");
 
-        cout << "after refine "; print_poly(fixed);
+    cout << "after refine "; print_poly(fixed);
+    vector<spoint> pointvec(begin(fixed), end(fixed));
 
-        vector<spoint> tmp{begin(fixed), end(fixed)};
-        points = tmp;
-    }
-    /*
-    cerr << "Points:" << endl;
-    for(auto& p : points) {
-        cerr << "  " << p << endl;
-    }
-    */
-    draw(600, 600, points, p.first, p.second, argv[2]);
+    draw(600, 600, pointvec, p.first, p.second, argv[2]);
     curtime("after draw");
 }
