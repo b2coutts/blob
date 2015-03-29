@@ -108,7 +108,6 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
 {
     cairo_new_path(cr);
     for(auto& s : points) {
-        cerr << "Drawing point " << s << endl;
         cairo_line_to(cr, s.x, s.y);
     }
     cairo_close_path(cr);
@@ -150,7 +149,6 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
 
     // TODO draw from last to first
 
-        cout << "cairo_arc(cr, a.x, a.y, a_rad, previous_angle, theta)" << endl;
     for(size_t i = 0; i < points.size(); i++) {
         spoint a = points[i % points.size()];
         spoint b = points[(i + 1) % points.size()];
@@ -158,26 +156,25 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
         double a_rad = radii[i % points.size()];
         double b_rad = radii[(i+1) % points.size()];
 
-        cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
-             << ", " << ") = ";
+        //cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
+             //<< ", " << ") = ";
         dpair = smooth_line_angle(a, b, a_rad, b_rad);
-        cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
-            //rotccw(stv(*(points.begin())) - stv(points.back()) , PI/2));
+        //cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
 
         if(a.inblob && b.inblob){
-            cout << "NEG(" << a.x << "," << a.y << "," << a_rad << ","
+            cout << "cairo_arc_negative(" << a.x << "," << a.y << "," << a_rad << ","
                  << b_rad << "," << deg(previous_angle) << "," << deg(dpair.first) << endl;
             cairo_arc_negative(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
         }else if(a.inblob && !b.inblob){
-            cout << "NEG(" << a.x << "," << a.y << "," << a_rad << ","
+            cout << "cairo_arc_negative(" << a.x << "," << a.y << "," << a_rad << ","
                  << b_rad << "," << deg(previous_angle) << "," << deg(dpair.first) << endl;
             cairo_arc_negative(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
         }else if(!a.inblob && b.inblob){
-            cout << "arc(" << a.x << "," << a.y << "," << a_rad << ","
+            cout << "cairo_arc(" << a.x << "," << a.y << "," << a_rad << ","
                  << deg(previous_angle) << "," << deg(dpair.first) << endl;
             cairo_arc(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
         }else{
-            cout << "arc(" << a.x << "," << a.y << "," << a_rad << ","
+            cout << "cairo_arc(" << a.x << "," << a.y << "," << a_rad << ","
                  << deg(previous_angle) << "," << deg(dpair.first) << endl;
             cairo_arc(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
         }

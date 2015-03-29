@@ -15,21 +15,16 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){
     list<spoint>::iterator min_idx = poly.begin();
     list<spoint>::iterator j;
     double min = dist(*min_idx, p) + dist(poly.back(), p);
-    cout << "IN: init min: " << min << endl;
     for(j = poly.begin(); j != poly.end(); ++j){
         list<spoint>::iterator next = j; ++next;
         if(next == poly.end()) break;
 
         double sum = dist(*j, p) + dist(*next, p);
-        cout << "IN: (p,*j,*next)=(" << p << "," << *j << "," << *next << ")"
-             << ", sum = " << sum << endl;
         if(sum < min){
-            cout << "OVERRIDE" << endl;
             min = sum;
             min_idx = next;
         }
     }
-    cout << "IN: point=" << p << ", *min_idx=" << *min_idx << endl;
 
     return poly.insert(min_idx, p);
 }
@@ -37,15 +32,9 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){
 // compute the "fixed" polygon
 list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
     list<spoint> hull = giftwrap(inc, exc);
-    cout << "initial polygon: ";
-    for(auto it = hull.begin(); it != hull.end(); ++it){
-        cout << *it << ", ";
-    }
-    cout << endl;
 
     for(int i = 0; i < exc.size(); i++){
         if(point_inside(exc[i], hull)){
-            cout << "exc point inside: " << exc[i] << endl;
             list<spoint>::iterator before, added, after;
             before = added = after = insert_nearest(exc[i], hull);
 
@@ -117,17 +106,6 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
             if(pt == exc[i]) inpoly = true;
         }
 
-        if(exc[i].x == 0 && exc[i].y == -1){
-            cout << "LOL: exc[i] is " << exc[i] << ", with d=" << excdists[i] <<
-                ", a,b are " << *ia << *ib << endl;
-
-            cout << (inner(nrml, stv(exc[i])-a) < excdists[i]) << ", "
-             << (inner(nrml, stv(exc[i])-a) > 0) << ", "
-             << (inner(dir, stv(exc[i])-a) > 0) << ", "
-             << (inner(dir, b-stv(exc[i])) > 0) << endl;
-
-        }
-
         // TODO: we can adjust these thresholds (in particular the dist
         // thresholds) to make it look nicer
         if(!inpoly &&
@@ -150,11 +128,6 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
         list<spoint>::iterator prev, next;
         prev = next = iter;
         --prev; ++next;
-        cout << "inserted " << *iter << " between " << *prev << " and " << *next
-            << endl;
-        for(auto &pt : poly){
-            if(pt == *iter) cout << "MATCH: " << pt << endl;
-        }
         // TODO: double-check that this actually works
         refine_line(poly, iter, ib, inc, exc, incdists, excdists);
     }
@@ -224,15 +197,12 @@ pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb
     if(sa.inblob != sb.inblob) delta = (ra + rb)/nrm;
 
     vec2d v = rotccw(b-a, PI/2);
-
-    cout << "(CALC u = " << u.x << "," << u.y << ")";
     
     // calculate normal vector to line. Recalculate if the line is on the wrong
     // side of the circles
     vec2d c;
     if(sa.inblob)  c = rotccw(w, acos(delta));
     else            c = rotccw(w, 2*PI - acos(delta));
-    cout << "(CALC c = " << c.x << "," << c.y << ")";
 
     double theta = atan2(c.y,c.x);
 
