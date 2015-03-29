@@ -5,3 +5,4 @@ IMPORTANT: code currently assumes that the hull is in clockwise order! (see
 - precompute distances between each pair of points
 
 - do a final pass on the polygon to skip circles that should be skipped
+    - note: this should fix the issue seen in datasets/torus
