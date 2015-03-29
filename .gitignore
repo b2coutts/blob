@@ -1,3 +1,5 @@
 *.o
 draw
 image.png
+.*.swp
+imgs
