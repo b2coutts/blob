@@ -11,7 +11,8 @@
 void draw(int width, int height,
         std::vector<spoint> &hull,
         std::vector<spoint> &inpoints,
-        std::vector<spoint> &expoints);
+        std::vector<spoint> &expoints,
+        const char *filename);
 void scale_world(cairo_t * cr,
         double boundry,
         double width, double height,

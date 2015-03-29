@@ -21,11 +21,17 @@ void print_poly(list<spoint> poly){
     cout << endl;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if(argc <= 2){
+        cerr << "Usage: " << argv[0] << " point_file output_file" << endl;
+        exit(1);
+    }
+
     ifstream file;
     vector<spoint> points;
 
-    file.open("points.txt");
+    // TODO: do some error-checking wrt the filename
+    file.open(argv[1]);
     auto p = read_points(file);
     file.close();
 
@@ -51,5 +57,5 @@ int main() {
         cerr << "  " << p << endl;
     }
     */
-    draw(600, 600, points, p.first, p.second);
+    draw(600, 600, points, p.first, p.second, argv[2]);
 }

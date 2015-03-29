@@ -17,7 +17,8 @@ const double TAU = 6.28318530718;
 void draw(int width, int height,
         vector<spoint> &hull,
         vector<spoint> &inpoints,
-        vector<spoint> &expoints)
+        vector<spoint> &expoints,
+        const char *filename)
 {
   cairo_surface_t *surface;
   cairo_t *cr;
@@ -55,7 +56,8 @@ void draw(int width, int height,
   // End actual code
 
 
-  cairo_surface_write_to_png(surface, "image.png");
+  // TODO: error checking on filename
+  cairo_surface_write_to_png(surface, filename);
 
   cairo_destroy(cr);
   cairo_surface_destroy(surface);
