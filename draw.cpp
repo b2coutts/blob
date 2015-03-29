@@ -99,9 +99,6 @@ void scale_world(cairo_t * cr,
   cairo_translate(cr,
           -minx * ((boundry-1.0) / 2 + 1),
           -maxy * ((boundry-1.0) / 2 + 1));
-
-    // TODO: remove this line; used for a particular debug case
-    cairo_translate(cr, 0.3, -0.6);
 }
 
 void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
