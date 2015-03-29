@@ -14,6 +14,11 @@ using namespace std;
 const double TAU = 6.28318530718;
 #define PI 3.14159265358979323846
 
+// factor by which one divides the minimum distance to get the radius.
+// Increasing this number will make the blob smaller/thinner.  Must be at least
+// 2.0
+#define MINDIST_RADIUS_FACTOR 3.0
+
 void draw(int width, int height,
         vector<spoint> &hull,
         vector<spoint> &inpoints,
@@ -130,8 +135,7 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
             if(x == points[i]) continue;
             radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
         }
-        // slightly more than 2 to avoid overlap due to imprecision
-        radii[i] /= 2.01;
+        radii[i] /= MINDIST_RADIUS_FACTOR;
     }
 
     // TODO: remove this convenient macro
