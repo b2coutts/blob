@@ -28,4 +28,13 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc);
 
+// given a refined polygon, remove vertices that would cause crossing lines
+// (i.e., where the interpolant would loop around that point and
+// self-intersect)
+void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc);
+
+// computes the radii of the vertices of a polygon, for the interpolant
+vector<double> get_radii(const vector<spoint> &points,
+                          vector<spoint> &inpoints, vector<spoint> &expoints);
+
 #endif

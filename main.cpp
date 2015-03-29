@@ -45,8 +45,11 @@ int main(int argc, char *argv[]) {
     curtime("after refine_poly");
 
     cout << "after refine "; print_poly(fixed);
-    vector<spoint> pointvec(begin(fixed), end(fixed));
 
-    draw(600, 600, pointvec, p.first, p.second, argv[2]);
+    vector<spoint> pointvec(begin(fixed), end(fixed));
+    vector<double> radii = get_radii(pointvec, p.first, p.second);
+    curtime("after radii");
+
+    draw(600, 600, pointvec, p.first, p.second, radii, argv[2]);
     curtime("after draw");
 }

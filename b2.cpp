@@ -9,6 +9,11 @@
 
 #define PI 3.14159265358979323846
 
+// factor by which one divides the minimum distance to get the radius.
+// Increasing this number will make the blob smaller/thinner.  Must be at least
+// 2.0
+#define MINDIST_RADIUS_FACTOR 3.0
+
 // helper function for writing a polygon to stdout
 void print_poly(list<spoint> poly){
     cout << "Polygon: ";
@@ -193,10 +198,8 @@ double normalize(double theta){
     return theta;
 }
 
-// for consecutive points sa,sb, with radii ra,rb, (with outward normal vector
-// v), calculates the angles (from sa,sb repsectively) at which to draw a
-// smooth line from the circle around sa to the circle around sb
-pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb){
+// like smooth_line_angle, but computes the normal vector c
+vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
     vec2d a = stv(sa);
     vec2d b = stv(sb);
     vec2d u = b - a;
@@ -213,7 +216,36 @@ pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb
     if(sa.inblob)  c = rotccw(w, acos(delta));
     else            c = rotccw(w, 2*PI - acos(delta));
 
-    double theta = atan2(c.y,c.x);
+    return c;
+}
 
+// calculate the radius of each vertex
+// TODO: should this count *all* points of the same inblob type? Are there
+// situations where we can decide we don't need to?
+vector <double> get_radii(const vector<spoint> &points, vector<spoint> &inpoints,
+                      vector<spoint> &expoints){
+    vector<double> radii(points.size());
+    for(int i = 0; i < points.size(); i++){
+        radii[i] = numeric_limits<double>::max();
+        for(auto &x : inpoints){
+            if(x == points[i]) continue;
+            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
+        }
+        for(auto &x : expoints){
+            if(x == points[i]) continue;
+            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
+        }
+        radii[i] /= MINDIST_RADIUS_FACTOR;
+    }
+    return radii;
+}
+
+// for consecutive points sa,sb, with radii ra,rb, (with outward normal vector
+// v), calculates the angles (from sa,sb repsectively) at which to draw a
+// smooth line from the circle around sa to the circle around sb
+pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb){
+    vec2d c = smooth_line_normal(sa, sb, ra, rb);
+    double theta = atan2(c.y,c.x);
     return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
 }
+

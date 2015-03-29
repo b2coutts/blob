@@ -14,15 +14,11 @@ using namespace std;
 const double TAU = 6.28318530718;
 #define PI 3.14159265358979323846
 
-// factor by which one divides the minimum distance to get the radius.
-// Increasing this number will make the blob smaller/thinner.  Must be at least
-// 2.0
-#define MINDIST_RADIUS_FACTOR 3.0
-
 void draw(int width, int height,
         vector<spoint> &hull,
         vector<spoint> &inpoints,
         vector<spoint> &expoints,
+        vector<double> &radii,
         const char *filename)
 {
   cairo_surface_t *surface;
@@ -49,7 +45,7 @@ void draw(int width, int height,
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
-  draw_with_smoothed_lines(cr, hull, inpoints, expoints);
+  draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
   draw_points(cr, inpoints, 0.05);
 
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.6);
@@ -117,28 +113,12 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
 }
 
 void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
-                             vector<spoint> &inpoints, vector<spoint> &expoints)
+                             vector<spoint> &inpoints, vector<spoint> &expoints,
+                             vector<double> &radii)
 {
     cairo_new_path(cr);
 
-    // calculate the radius of each vertex
-    // TODO: should this count *all* points of the same inblob type? Are there
-    // situations where we can decide we don't need to?
-    vector<double> radii(points.size());
-    for(int i = 0; i < points.size(); i++){
-        radii[i] = numeric_limits<double>::max();
-        for(auto &x : inpoints){
-            if(x == points[i]) continue;
-            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
-        }
-        for(auto &x : expoints){
-            if(x == points[i]) continue;
-            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
-        }
-        radii[i] /= MINDIST_RADIUS_FACTOR;
-    }
-
-    // TODO: remove this convenient macro
+    // macro for outputting an angle in degrees
     #define deg(x) (x*360 / TAU)
 
     // TODO: assumes clockwise convex hull (for last arg)
