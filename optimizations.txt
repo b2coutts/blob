@@ -6,3 +6,9 @@ IMPORTANT: code currently assumes that the hull is in clockwise order! (see
 
 - do a final pass on the polygon to skip circles that should be skipped
     - note: this should fix the issue seen in datasets/torus
+
+- should be more lenient in allowing points into the convex hull; some points
+  are far enough that their radius does not affect the polytope edge, but close
+  enough that it should affect the interpolant edge
+    - PROBLEM: will this cause a chain reaction that adds all excluded points to
+      the polytope in a dense dataset?
