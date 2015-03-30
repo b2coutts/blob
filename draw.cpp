@@ -14,6 +14,8 @@ using namespace std;
 const double TAU = 6.28318530718;
 #define PI 3.14159265358979323846
 
+#define POINT_RADIUS 0.03
+
 void draw(int width, int height,
         vector<spoint> &hull,
         vector<spoint> &inpoints,
@@ -45,11 +47,13 @@ void draw(int width, int height,
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
+  draw_points(cr, inpoints, POINT_RADIUS);
+
+  cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.3);
   draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
-  draw_points(cr, inpoints, 0.05);
 
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.6);
-  draw_points(cr, expoints, 0.05);
+  draw_points(cr, expoints, POINT_RADIUS);
 
   cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
   draw_axis(cr);
@@ -155,6 +159,8 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
         previous_angle = dpair.second;
     }
     cairo_close_path(cr);
+    cairo_fill_preserve(cr);
+    cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.8);
     cairo_stroke(cr);
 }
 void draw_with_smoothed_lines_counterclockwise(cairo_t *cr, const vector<spoint> &points)
@@ -218,7 +224,7 @@ void draw_points(cairo_t *cr, const std::vector<spoint> &points, const double ra
     for(auto& s : points) {
         cairo_new_path(cr);
         cairo_arc(cr, s.x, s.y, radius, 0, TAU);
-        cairo_stroke(cr);
+        cairo_fill(cr);
     }
 }
 void draw_axis(cairo_t *cr) {
