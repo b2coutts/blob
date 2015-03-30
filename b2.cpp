@@ -14,6 +14,11 @@
 // 2.0
 #define MINDIST_RADIUS_FACTOR 3.0
 
+// points for which min_dist_to_other_point*REFINE_EPSILON > dist_to_line will
+// be added to the polytope. REFINE_EPSILON should be at least 1.0; increasing
+// it causes the polytope to reach further for vertices
+#define REFINE_EPSILON 1.0
+
 // helper function for writing a polygon to stdout
 void print_poly(list<spoint> poly){
     cout << "Polygon: ";
@@ -106,7 +111,7 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
         // TODO: we can adjust these thresholds (in particular the dist
         // thresholds) to make it look nicer
         if(!inpoly &&
-           inner(nrml, a-stv(inc[i])) < incdists[i] &&
+           inner(nrml, a-stv(inc[i])) < incdists[i] * REFINE_EPSILON &&
            inner(nrml, a-stv(inc[i])) > 0 &&
            inner(dir, stv(inc[i])-a) > 0 &&
            inner(dir, b-stv(inc[i])) > 0){
