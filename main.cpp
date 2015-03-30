@@ -43,8 +43,11 @@ int main(int argc, char *argv[]) {
     cout << "before refine "; print_poly(fixed);
     refine_poly(fixed, p.first, p.second);
     curtime("after refine_poly");
-
     cout << "after refine "; print_poly(fixed);
+
+    rm_crossing(fixed, p.first, p.second);
+    curtime("after rm_crossing");
+    cout << "after rmcrossing: "; print_poly(fixed);
 
     vector<spoint> pointvec(begin(fixed), end(fixed));
     vector<double> radii = get_radii(pointvec, p.first, p.second);

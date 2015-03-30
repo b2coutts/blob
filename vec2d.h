@@ -50,4 +50,6 @@ double dist(vec2d u, vec2d v);
 // converts a spoint to a vec2d
 vec2d stv(spoint p);
 
+std::ostream& operator<<(std::ostream& out, const vec2d &v);
+
 #endif

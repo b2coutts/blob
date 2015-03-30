@@ -219,6 +219,22 @@ vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
     return c;
 }
 
+// calculate the radius of a single vertex
+double vertex_radius(spoint v, vector<spoint> &inpoints,
+                             vector<spoint> &expoints){
+    double rad = numeric_limits<double>::max();
+    for(auto &x : inpoints){
+        if(x == v) continue;
+        rad = min(rad, norm(stv(v) - stv(x)));
+    }
+    for(auto &x : expoints){
+        if(x == v) continue;
+        rad = min(rad, norm(stv(v) - stv(x)));
+    }
+    rad /= MINDIST_RADIUS_FACTOR;
+    return rad;
+}
+
 // calculate the radius of each vertex
 // TODO: should this count *all* points of the same inblob type? Are there
 // situations where we can decide we don't need to?
@@ -226,16 +242,7 @@ vector <double> get_radii(const vector<spoint> &points, vector<spoint> &inpoints
                       vector<spoint> &expoints){
     vector<double> radii(points.size());
     for(int i = 0; i < points.size(); i++){
-        radii[i] = numeric_limits<double>::max();
-        for(auto &x : inpoints){
-            if(x == points[i]) continue;
-            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
-        }
-        for(auto &x : expoints){
-            if(x == points[i]) continue;
-            radii[i] = min(radii[i], norm(stv(points[i]) - stv(x)));
-        }
-        radii[i] /= MINDIST_RADIUS_FACTOR;
+        radii[i] = vertex_radius(points[i], inpoints, expoints);
     }
     return radii;
 }
@@ -249,3 +256,56 @@ pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb
     return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
 }
 
+// TODO: maybe iterate more efficiently, instead of going *all* the way back to
+// the beginning every time something is removed
+void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
+    bool removed_pt = false;
+    spoint lastpt = poly.back();
+    int idx = 0;
+    for(auto s = poly.begin(); s != poly.end(); ++s){
+        auto next = s; ++next;
+        if(next == poly.end()) next = poly.begin();
+
+        vec2d v1 = stv(lastpt);
+        vec2d v2 = stv(*s);
+        vec2d v3 = stv(*next);
+
+        double r1 = vertex_radius(lastpt,inc,exc);
+        double r2 = vertex_radius(*s,inc,exc);
+        double r3 = vertex_radius(*next,inc,exc);
+
+        vec2d c1 = smooth_line_normal(lastpt, *s, r1, r2);
+        vec2d c2 = smooth_line_normal(*s, *next, r2, r3);
+        
+        vec2d a = v1 + scale(r1, c1);
+        vec2d b = v2 + scale( (lastpt.inblob == (*s).inblob ? r2 : -r2), c1);
+        vec2d c = v2 + scale(r2, c2);
+        vec2d d = v3 + scale( ((*s).inblob == (*next).inblob ? r3 : -r3), c2);
+
+        cout << "a,b,c,d: " << a << b << c << d << endl;
+
+        // perp of c1 onto c2
+        vec2d perp = c1 - scale(inner(c1,c2), c2);
+        // coefficient of c2
+        double k2 = inner(c2, c);
+        // coefficient of perp
+        double k1 = (inner(c1, a) - k2*inner(c1,c2)) / inner(c1,perp); 
+
+        // intersection of lines a->b and c->d
+        vec2d inter = scale(k1, perp) + scale(k2, c2);
+
+        cout << "inter: " << inter << endl;
+
+        double ip1 = inner(b-a, inter);
+        double ip2 = inner(d-c, inter);
+        if(inner(b-a, a) < ip1 && ip1 < inner(b-a, b) &&
+           inner(d-c, c) < ip2 && ip2 < inner(d-c, d)){
+            poly.erase(s);
+            removed_pt = true;
+            break;
+        }
+        lastpt = *s;
+    }
+
+    //if(removed_pt) rm_crossing(poly, inc, exc);
+}

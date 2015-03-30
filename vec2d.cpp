@@ -32,3 +32,7 @@ double dist(vec2d u, vec2d v){
 vec2d stv(spoint p){
     return {p.x, p.y};
 }
+
+std::ostream& operator<<(std::ostream& out, const vec2d &v){
+    out << "(" << v.x << "," << v.y << ")";
+}
