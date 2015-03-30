@@ -3,7 +3,8 @@
 #define CONFIG_H
 
 /* CONFIG PARAMS FOR MAIN.CPP */
-// toggles whether or not to run refine_poly, rm_crossing steps
+// toggles whether or not to run fix_hull, refine_poly, rm_crossing
+#define RUN_FIX_HULL true
 #define RUN_REFINE_POLY true
 #define RUN_RM_CROSSING true
 

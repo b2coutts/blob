@@ -42,6 +42,7 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){
 // compute the "fixed" polygon
 list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
     list<spoint> hull = giftwrap(inc, exc);
+    if(!RUN_FIX_HULL) return hull;
 
     for(int i = 0; i < exc.size(); i++){
         if(point_inside(exc[i], hull)){
