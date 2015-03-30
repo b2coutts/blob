@@ -8,9 +8,13 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 pair<vector<spoint>, vector<spoint> > read_points(istream& in);
+
+pair<vector<spoint>, list< list< vector<size_t> > > >
+  read_cook_data(istream &data_file, istream &comb_file);
 
 // prints the currently used CPU time
 void curtime(const char *desc){
@@ -24,35 +28,74 @@ void curtime(const char *desc){
 
 int main(int argc, char *argv[]) {
     if(argc <= 2){
-        cerr << "Usage: " << argv[0] << " point_file output_file" << endl;
+        cerr << "Usage: " << argv[0] << " point_file comb_file output_file" << endl;
         exit(1);
     }
 
-    ifstream file;
+    ifstream data_file, comb_file;
 
     // TODO: do some error-checking wrt the filename
     curtime("begin");
-    file.open(argv[1]);
-    auto p = read_points(file);
-    file.close();
+    data_file.open(argv[1]);
+    comb_file.open(argv[2]);
+    auto p = read_cook_data(data_file, comb_file);
+    vector<spoint> points = p.first;
+    list< list< vector< size_t > > > combs = p.second;
+    data_file.close();
+    comb_file.close();
     curtime("after read");
 
-    list<spoint> fixed = fixed_hull(p.first, p.second);
-    curtime("after fixed_hull");
+    string combfile_base(argv[3]);
+    int comb_number = -1;
+    for(list< vector< size_t > > &comb : p.second) {
+        comb_number++;
+        curtime("before reseting spoints for new comb");
 
-    cout << "before refine "; print_poly(fixed);
-    refine_poly(fixed, p.first, p.second);
-    curtime("after refine_poly");
-    cout << "after refine "; print_poly(fixed);
+        int set_number = -1;
+        for(vector< size_t > comb_set : comb) {
+            if(comb_set.size() < 3) {
+                cerr << "Nope, not touching the small sets" << endl;
+                continue;
+            }
+            set_number ++;
+            vector< spoint > included, excluded;
+            for(spoint& p : points) {
+                p.inblob = false;
+            }
+            for(size_t i : comb_set) {
+                points[i].inblob = true;
+            }
+            for(spoint& p : points) {
+                if(p.inblob) {
+                    included.push_back(p);
+                } else {
+                    excluded.push_back(p);
+                }
+            }
 
-    rm_crossing(fixed, p.first, p.second);
-    curtime("after rm_crossing");
-    cout << "after rmcrossing: "; print_poly(fixed);
+            list<spoint> fixed = fixed_hull(included, excluded);
+            curtime("after fixed_hull");
 
-    vector<spoint> pointvec(begin(fixed), end(fixed));
-    vector<double> radii = get_radii(pointvec, p.first, p.second);
-    curtime("after radii");
+            cout << "before refine "; print_poly(fixed);
+            refine_poly(fixed, included, excluded);
+            curtime("after refine_poly");
+            cout << "after refine "; print_poly(fixed);
 
-    draw(600, 600, pointvec, p.first, p.second, radii, argv[2]);
-    curtime("after draw");
+            rm_crossing(fixed, included, excluded);
+            curtime("after rm_crossing");
+            cout << "after rmcrossing: "; print_poly(fixed);
+
+            vector<spoint> pointvec(begin(fixed), end(fixed));
+            vector<double> radii = get_radii(pointvec, included, excluded);
+            curtime("after radii");
+
+            std::stringstream out_filename;
+            out_filename << combfile_base << "_" << comb_number
+                << "_" << set_number << ".png";
+            draw(600, 600, pointvec, included, excluded, radii, out_filename.str().c_str());
+            curtime("after draw");
+        }
+        // Only draw the first comb.
+        break;
+    }
 }
