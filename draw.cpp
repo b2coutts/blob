@@ -14,7 +14,7 @@ using namespace std;
 const double TAU = 6.28318530718;
 #define PI 3.14159265358979323846
 
-#define POINT_RADIUS 0.03
+#define POINT_RADIUS 0.035
 
 void draw(int width, int height,
         vector<spoint> &hull,
@@ -46,14 +46,14 @@ void draw(int width, int height,
 
 
   cairo_set_line_width(cr, 0.02);
-  cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
+  cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.9);
   draw_points(cr, inpoints, POINT_RADIUS);
+
+  cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.9);
+  draw_points(cr, expoints, POINT_RADIUS);
 
   cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.3);
   draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
-
-  cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.6);
-  draw_points(cr, expoints, POINT_RADIUS);
 
   cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
   draw_axis(cr);
