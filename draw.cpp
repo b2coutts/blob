@@ -142,18 +142,10 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
         dpair = smooth_line_angle(a, b, a_rad, b_rad);
         //cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
 
-        if(a.inblob && b.inblob){
+        if(a.inblob){
             cout << "cairo_arc_negative(" << a.x << "," << a.y << "," << a_rad << ","
                  << deg(previous_angle) << "," << deg(dpair.first) << ")" <<  endl;
             cairo_arc_negative(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
-        }else if(a.inblob && !b.inblob){
-            cout << "cairo_arc_negative(" << a.x << "," << a.y << "," << a_rad << ","
-                 << deg(previous_angle) << "," << deg(dpair.first) << ")" << endl;
-            cairo_arc_negative(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
-        }else if(!a.inblob && b.inblob){
-            cout << "cairo_arc(" << a.x << "," << a.y << "," << a_rad << ","
-                 << deg(previous_angle) << "," << deg(dpair.first) << ")" << endl;
-            cairo_arc(cr, a.x, a.y, a_rad, previous_angle, dpair.first);
         }else{
             cout << "cairo_arc(" << a.x << "," << a.y << "," << a_rad << ","
                  << deg(previous_angle) << "," << deg(dpair.first) << ")" << endl;
