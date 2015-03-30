@@ -263,6 +263,7 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     spoint lastpt = poly.back();
     int idx = 0;
     for(auto s = poly.begin(); s != poly.end(); ++s){
+        //cout << endl << "rm_crossing on " << *s << endl;
         auto next = s; ++next;
         if(next == poly.end()) next = poly.begin();
 
@@ -302,10 +303,12 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
            inner(d-c, c) < ip2 && ip2 < inner(d-c, d)){
             poly.erase(s);
             removed_pt = true;
+            //cout << "CUT!" << endl;
+            //for(auto &debug : poly) cout << debug << endl;
             break;
         }
         lastpt = *s;
     }
 
-    //if(removed_pt) rm_crossing(poly, inc, exc);
+    if(removed_pt) rm_crossing(poly, inc, exc);
 }
