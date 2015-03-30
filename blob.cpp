@@ -220,7 +220,7 @@ list<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
 
 
         for(; endit != inc.end(); endit++) {
-            while(*endit == base){ endit++; }
+            if(*endit == base){ endit++; }
             if(endit == inc.end()) break;
             spoint &end = *endit;
             //if(j == leftmost_index) { continue; }
