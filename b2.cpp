@@ -193,8 +193,8 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
 
 // normalizes an angle to be within [0,2*PI)
 double normalize(double theta){
-    while(theta < 0) theta += 2*PI;
-    while(theta >= 2*PI) theta-= 2*PI;
+    while(theta < -PI) theta += 2*PI;
+    while(theta >= PI) theta-= 2*PI;
     return theta;
 }
 
@@ -282,7 +282,7 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         vec2d c = v2 + scale(r2, c2);
         vec2d d = v3 + scale( ((*s).inblob == (*next).inblob ? r3 : -r3), c2);
 
-        cout << "a,b,c,d: " << a << b << c << d << endl;
+        //cout << "a,b,c,d: " << a << b << c << d << endl;
 
         // perp of c1 onto c2
         vec2d perp = c1 - scale(inner(c1,c2), c2);
@@ -294,7 +294,7 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         // intersection of lines a->b and c->d
         vec2d inter = scale(k1, perp) + scale(k2, c2);
 
-        cout << "inter: " << inter << endl;
+        //cout << "inter: " << inter << endl;
 
         double ip1 = inner(b-a, inter);
         double ip2 = inner(d-c, inter);
