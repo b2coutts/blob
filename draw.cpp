@@ -14,7 +14,9 @@ using namespace std;
 const double TAU = 6.28318530718;
 #define PI 3.14159265358979323846
 
-#define POINT_RADIUS 0.035
+#define POINT_RADIUS 2.0
+
+double avg_scale;
 
 void draw(int width, int height,
         vector<spoint> &hull,
@@ -37,7 +39,7 @@ void draw(int width, int height,
   */
 
   // Set up scale properly
-  scale_world(cr, 2.0, width, height, hull);
+  scale_world(cr, 2.0, width, height, inpoints, expoints);
 
   // Actual code call
   //
@@ -47,10 +49,10 @@ void draw(int width, int height,
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.9);
-  draw_points(cr, inpoints, POINT_RADIUS);
+  draw_points(cr, inpoints, POINT_RADIUS / avg_scale);
 
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.9);
-  draw_points(cr, expoints, POINT_RADIUS);
+  draw_points(cr, expoints, POINT_RADIUS / avg_scale);
 
   cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.3);
   draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
@@ -73,13 +75,20 @@ void draw(int width, int height,
 void scale_world(cairo_t * cr,
         const double boundry,
         const double width, const double height,
-        const vector<spoint> &points)
+        const vector<spoint> &inpoints,
+        const vector<spoint> &expoints)
 {
   double maxx = numeric_limits<double>::lowest();
   double maxy = numeric_limits<double>::lowest();
   double minx = numeric_limits<double>::max();
   double miny = numeric_limits<double>::max();
-  for (auto& s : points) {
+  for (auto& s : inpoints) {
+      maxx = max(s.x, maxx);
+      maxy = max(s.y, maxy);
+      minx = min(s.x, minx);
+      miny = min(s.y, miny);
+  }
+  for (auto& s : expoints) {
       maxx = max(s.x, maxx);
       maxy = max(s.y, maxy);
       minx = min(s.x, minx);
@@ -95,6 +104,7 @@ void scale_world(cairo_t * cr,
 
   double scalex = ((double) width) / user_width;
   double scaley = ((double) height) / user_height;
+  avg_scale = (scalex + scaley) / 2;
 
   // TODO fixed aspect ratio, no smoosh.
   //double scale = min(scalex, scaley);
