@@ -26,4 +26,4 @@ b2.o : types.h vec2d.h b2.h config.h
 .PHONY : clean
 
 clean :
-	- rm -f draw draw.o main.o input.o
+	- rm -f draw draw.o main.o input.o b2.o blob.o vec2d.o
