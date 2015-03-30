@@ -1,6 +1,7 @@
 #include "draw.h"
 #include "blob.h"
 #include "b2.h"
+#include "config.h"
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -39,20 +40,25 @@ int main(int argc, char *argv[]) {
 
     list<spoint> fixed = fixed_hull(p.first, p.second);
     curtime("after fixed_hull");
+    cout << "after fixed_hull: "; print_poly(fixed);
 
-    cout << "before refine "; print_poly(fixed);
-    refine_poly(fixed, p.first, p.second);
-    curtime("after refine_poly");
-    cout << "after refine "; print_poly(fixed);
+    if(RUN_REFINE_POLY){
+        refine_poly(fixed, p.first, p.second);
+        curtime("after refine_poly");
+        cout << "after refine "; print_poly(fixed);
+    }
 
-    rm_crossing(fixed, p.first, p.second);
-    curtime("after rm_crossing");
-    cout << "after rmcrossing: "; print_poly(fixed);
+    if(RUN_RM_CROSSING){
+        rm_crossing(fixed, p.first, p.second);
+        curtime("after rm_crossing");
+        cout << "after rmcrossing: "; print_poly(fixed);
+    }
 
     vector<spoint> pointvec(begin(fixed), end(fixed));
     vector<double> radii = get_radii(pointvec, p.first, p.second);
     curtime("after radii");
 
-    draw(600, 600, pointvec, p.first, p.second, radii, argv[2]);
+    draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, p.first, p.second,
+         radii, argv[2]);
     curtime("after draw");
 }

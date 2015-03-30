@@ -1,6 +1,7 @@
 #include "draw.h"
 #include "vec2d.h"
 #include "b2.h"
+#include "config.h"
 
 #include <vector>
 #include <iostream>
@@ -13,8 +14,6 @@
 using namespace std;
 const double TAU = 6.28318530718;
 #define PI 3.14159265358979323846
-
-#define POINT_RADIUS 2.0
 
 double avg_scale;
 
@@ -43,22 +42,23 @@ void draw(int width, int height,
 
   // Actual code call
   //
-  cairo_set_line_width(cr, 0.01);
-  draw_with_lines(cr, hull);
+  cairo_set_line_width(cr, POLY_THICKNESS / avg_scale);
+  if(DRAW_POLYGON) draw_with_lines(cr, hull);
 
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.9);
-  draw_points(cr, inpoints, POINT_RADIUS / avg_scale);
+  if(DRAW_POINTS) draw_points(cr, inpoints, POINT_RADIUS / avg_scale);
 
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.9);
-  draw_points(cr, expoints, POINT_RADIUS / avg_scale);
+  if(DRAW_POINTS) draw_points(cr, expoints, POINT_RADIUS / avg_scale);
 
   cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.3);
-  draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
+  if(DRAW_BLOB) draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
 
   cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
-  draw_axis(cr);
+  cairo_set_line_width(cr, AXIS_THICKNESS / avg_scale);
+  if(DRAW_AXES) draw_axis(cr);
 
   // End actual code
 

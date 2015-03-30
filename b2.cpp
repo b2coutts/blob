@@ -2,22 +2,13 @@
 #include "blob.h"
 #include "vec2d.h"
 #include "b2.h"
+#include "config.h"
 
 #include <iostream>
 #include <algorithm>
 #include <limits>
 
 #define PI 3.14159265358979323846
-
-// factor by which one divides the minimum distance to get the radius.
-// Increasing this number will make the blob smaller/thinner.  Must be at least
-// 2.0
-#define MINDIST_RADIUS_FACTOR 3.0
-
-// points for which min_dist_to_other_point*REFINE_EPSILON > dist_to_line will
-// be added to the polytope. REFINE_EPSILON should be at least 1.0; increasing
-// it causes the polytope to reach further for vertices
-#define REFINE_EPSILON 1.0
 
 // helper function for writing a polygon to stdout
 void print_poly(list<spoint> poly){
@@ -191,10 +182,6 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     free(incdists);
     free(excdists);
 }
-
-
-// TODO: replace with a smart radius function
-#define radius(x) (0.001)
 
 // normalizes an angle to be within [0,2*PI)
 double normalize(double theta){
