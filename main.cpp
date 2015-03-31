@@ -120,7 +120,9 @@ int main(int argc, char *argv[]) {
             out_filename << combfile_base << "_" << comb_number
                 << "_" << set_number << ".png";
             cerr << "Drawing to " << out_filename.str() << endl;
-            draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii, out_filename.str().c_str());
+            draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii,
+                    fill_colors[set_number],
+                    out_filename.str().c_str());
             curtime("after draw");
             cerr << endl;
         }

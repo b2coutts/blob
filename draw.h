@@ -42,6 +42,7 @@ void draw(int width, int height,
         std::vector<spoint> &inpoints,
         std::vector<spoint> &expoints,
         std::vector<double> &radii,
+        const color &fill_color,
         const char *filename);
 
 void draw_blob(cairo_t *cr,

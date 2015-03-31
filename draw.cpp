@@ -39,6 +39,7 @@ void draw(int width, int height,
         vector<spoint> &inpoints,
         vector<spoint> &expoints,
         vector<double> &radii,
+        const color& fill_color,
         const char *filename)
 {
   cairo_surface_t *surface;
@@ -70,8 +71,14 @@ void draw(int width, int height,
   cairo_set_source_rgba(cr, 0, 0.2, 0.8, 0.9);
   if(DRAW_POINTS) draw_points(cr, expoints, POINT_RADIUS / avg_scale);
 
-  cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.3);
-  if(DRAW_BLOB) draw_with_smoothed_lines(cr, hull, radii);
+  if(DRAW_BLOB) {
+      cairo_set_source_color(cr, fill_color);
+      draw_with_smoothed_lines(cr, hull, radii);
+      cairo_fill_preserve(cr);
+      cairo_set_source_rgba (cr, fill_color.r, fill_color.g, fill_color.b,
+              0.8);
+      cairo_stroke(cr);
+  }
 
   cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
   cairo_set_line_width(cr, AXIS_THICKNESS / avg_scale);
