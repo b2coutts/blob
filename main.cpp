@@ -46,18 +46,38 @@ int main(int argc, char *argv[]) {
     comb_file.close();
     curtime("after read");
 
+
+    const std::vector<color> fill_colors = {
+        {255, 102, 0, 77},
+        {51, 155, 155,77},
+        {0, 0, 153, 77},
+        {255, 51, 153,77},
+        {102, 51, 255, 77},
+
+        {51, 153, 0,  77},
+        {153, 204, 0, 77},
+        {102, 0, 102, 77},
+        {204, 0,  51, 77},
+
+        {255, 204, 0, 77},
+        {255, 0, 0, 77},
+        {255, 153, 51, 77},
+        {102, 255, 0, 77},
+    };
+
     string combfile_base(argv[3]);
+    list< vector< spoint > > comb_hulls;
+    list< vector< double > > comb_radiii;
     int comb_number = -1;
     for(list< vector< size_t > > &comb : p.second) {
         comb_number++;
         curtime("before reseting spoints for new comb");
 
+        comb_hulls.clear();
+        comb_radiii.clear();
+
         int set_number = -1;
         for(vector< size_t > comb_set : comb) {
-            if(comb_set.size() < 3) {
-                cerr << "Nope, not touching the small sets" << endl;
-                continue;
-            }
             set_number ++;
             vector< spoint > included, excluded;
             for(spoint& p : points) {
@@ -92,14 +112,27 @@ int main(int argc, char *argv[]) {
 
             vector<spoint> pointvec(begin(fixed), end(fixed));
             vector<double> radii = get_radii(pointvec, included, excluded);
+            comb_hulls.push_back(pointvec);
+            comb_radiii.push_back(radii);
             curtime("after radii");
 
             std::stringstream out_filename;
             out_filename << combfile_base << "_" << comb_number
                 << "_" << set_number << ".png";
-            cout << out_filename.str() << endl;
+            cerr << "Drawing to " << out_filename.str() << endl;
             draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii, out_filename.str().c_str());
             curtime("after draw");
+            cerr << endl;
         }
+        std::stringstream out_filename;
+        out_filename << combfile_base << "_" << comb_number << ".png";
+        cerr << endl << out_filename.str() << endl;
+        draw_many_blobs(OUTPUT_IMG_WIDTH, OUTPUT_IMG_HEIGHT,
+                out_filename.str().c_str(),
+                points,
+                comb_hulls,
+                comb_radiii,
+                fill_colors);
+        cerr << endl;
     }
 }

@@ -50,7 +50,7 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
 
 // compute the "fixed" polygon
 list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
-    list<spoint> hull = giftwrap(inc, exc);
+    list<spoint> hull = giftwrap(inc);
     cout << "after giftwrap: "; print_poly(hull);
     if(!RUN_FIX_HULL) return hull;
 
@@ -266,6 +266,7 @@ pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb
 // TODO: maybe iterate more efficiently, instead of going *all* the way back to
 // the beginning every time something is removed
 void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
+    if(poly.size() == 2) {return;}
     bool removed_pt = false;
     spoint lastpt = poly.back();
     int idx = 0;

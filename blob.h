@@ -47,6 +47,6 @@ bool point_inside_triangle(
         const spoint& b,
         const spoint& c);
 
-std::list<spoint> giftwrap(std::vector<spoint> &included, std::vector<spoint> &excluded);
+std::list<spoint> giftwrap(const std::vector<spoint> &included);
 
 #endif
