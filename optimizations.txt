@@ -12,3 +12,8 @@ IMPORTANT: code currently assumes that the hull is in clockwise order! (see
   enough that it should affect the interpolant edge
     - PROBLEM: will this cause a chain reaction that adds all excluded points to
       the polytope in a dense dataset?
+
+- instead of adding points to a line in order along the line, add the nearest
+  point to the line, and reiterate (so the points can be added to either new
+  half of the broken line)
+    - less efficient, but probably better
