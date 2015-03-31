@@ -29,6 +29,9 @@
 #define DRAW_POLYGON true
 #define DRAW_BLOB true
 
+// controls buffer around edge of screen; larger => more space
+#define EDGE_BUFFER_WIDTH 1.5
+
 
 /* CONFIG PARAMS FOR B2.CPP */
 // factor by which one divides the minimum distance to get the radius.

@@ -56,10 +56,13 @@ void draw(int width, int height,
   */
 
   // Set up scale properly
-  scale_world(cr, 1.1, width, height, inpoints, expoints);
+  scale_world(cr, EDGE_BUFFER_WIDTH, width, height, inpoints, expoints);
 
   // Actual code call
   //
+  cairo_set_source_rgba(cr, 1, 1, 1, 1);
+  cairo_paint(cr);
+  cairo_set_source_rgb(cr, 0, 0, 0);
   cairo_set_line_width(cr, POLY_THICKNESS / avg_scale);
   if(DRAW_POLYGON) draw_with_lines(cr, hull);
 
@@ -105,7 +108,7 @@ void draw_many_blobs(
     auto p = draw_init(width, height);
     cairo_t *cr = p.first;
     cairo_surface_t * surface = p.second;
-    scale_world(cr, 1.1, width, height, points, points);
+    scale_world(cr, EDGE_BUFFER_WIDTH, width, height, points, points);
 
     cairo_set_line_width(cr, 0.02);
 
@@ -200,7 +203,7 @@ void scale_world(cairo_t * cr,
   cerr << "Maxx " << maxx << ", minx " << minx << endl;
   cerr << "Maxy " << maxy << ", miny " << miny << endl;
   cerr << "width " << user_width << ", height " << user_height << endl;
-  double x_offset = (user_width - user_width/boundry) / 2;
+  double x_offset = (user_width - user_width/boundry) / 2 - minx;
   // The reason the y offset works is because we have to move down by
   // user_height anyways
   double y_offset = -maxy * ((boundry-1.0) / 2 + 1);
