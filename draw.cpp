@@ -60,9 +60,11 @@ void draw(int width, int height,
 
   // Actual code call
   //
-  cairo_set_source_rgba(cr, 1, 1, 1, 1);
-  cairo_paint(cr);
-  cairo_set_source_rgb(cr, 0, 0, 0);
+  if(DRAW_BACKGROUND) {
+      cairo_set_source_rgba(cr, 1, 1, 1, 1);
+      cairo_paint(cr);
+  }
+  cairo_set_source_rgba(cr, 0.5, 0.5, 0.5, 1);
   cairo_set_line_width(cr, POLY_THICKNESS / avg_scale);
   if(DRAW_POLYGON) draw_with_lines(cr, hull);
 
@@ -109,6 +111,11 @@ void draw_many_blobs(
     cairo_t *cr = p.first;
     cairo_surface_t * surface = p.second;
     scale_world(cr, EDGE_BUFFER_WIDTH, width, height, points, points);
+
+    if(DRAW_BACKGROUND) {
+        cairo_set_source_rgba(cr, 1, 1, 1, 1);
+        cairo_paint(cr);
+    }
 
     cairo_set_line_width(cr, 0.02);
 
