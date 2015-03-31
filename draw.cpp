@@ -38,7 +38,7 @@ void draw(int width, int height,
   */
 
   // Set up scale properly
-  scale_world(cr, 2.0, width, height, inpoints, expoints);
+  scale_world(cr, 1.1, width, height, inpoints, expoints);
 
   // Actual code call
   //
@@ -111,9 +111,16 @@ void scale_world(cairo_t * cr,
 
   cerr << "Scaling by " << scalex << ", " << scaley << endl;
   cairo_scale(cr, scalex, -scaley);
-  cairo_translate(cr,
-          -minx * ((boundry-1.0) / 2 + 1),
-          -maxy * ((boundry-1.0) / 2 + 1));
+  cerr << "Maxx " << maxx << ", minx " << minx << endl;
+  cerr << "Maxy " << maxy << ", miny " << miny << endl;
+  cerr << "width " << user_width << ", height " << user_height << endl;
+  double x_offset = (user_width - user_width/boundry) / 2;
+  // The reason the y offset works is because we have to move down by
+  // user_height anyways
+  double y_offset = -maxy * ((boundry-1.0) / 2 + 1);
+  cerr << "Translated by " <<
+          x_offset << ", " << y_offset << endl;
+  cairo_translate(cr, x_offset, y_offset);
 }
 
 void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
