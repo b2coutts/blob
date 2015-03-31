@@ -21,13 +21,14 @@ void print_poly(list<spoint> poly){
 
 // given a point and a polygon, insert the point between the nearest two
 // vertices. Return an iterator to the inserted point
-list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){
-    list<spoint>::iterator min_idx = poly.begin();
+list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
+                                      const list<spoint>::iterator start,
+                                      const list<spoint>::iterator end){
+    list<spoint>::iterator min_idx = start;
     list<spoint>::iterator j;
-    double min = dist(*min_idx, p) + dist(poly.back(), p);
-    for(j = poly.begin(); j != poly.end(); ++j){
+    double min = dist(*min_idx, p) + dist(*end, p);
+    for(j = poly.begin(); j != end; ++j){
         list<spoint>::iterator next = j; ++next;
-        if(next == poly.end()) break;
 
         double sum = dist(*j, p) + dist(*next, p);
         if(sum < min){
@@ -35,6 +36,8 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){
             min_idx = next;
         }
     }
+
+    cout << "   ACTUAL INSERT: " << p << " into " << *min_idx << endl;
 
     return poly.insert(min_idx, p);
 }
@@ -48,12 +51,15 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
     for(int i = 0; i < exc.size(); i++){
         if(point_inside(exc[i], hull)){
             list<spoint>::iterator before, added, after;
-            before = added = after = insert_nearest(exc[i], hull);
+            before = added = after = insert_nearest(exc[i], hull, hull.begin(),
+                                                    --(hull.end()));
 
             if(before == hull.begin()) before = hull.end();
             --before;
             ++after;
             if(after == hull.end()) after = hull.begin();
+
+            //cout << "  CHECKING TRIANGLE " << *before << *added << *after << endl;
 
             // check if the triangle we removed contained any inc points
             // TODO: can optimize by storing points in kd-tree
@@ -62,11 +68,8 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
             for(int k = 0; k < inc.size(); k++){
                 if(point_inside_triangle(inc[k], *before, *added, *after) &&
                    !point_inside(inc[k], hull)){
-                    auto ins_idx = added;
-                    if(dist(stv(inc[k]), stv(*before)) >
-                       dist(stv(inc[k]), stv(*after)))
-                        ins_idx = after;
-                    hull.insert(ins_idx, inc[k]);
+                    //cout << "  INSERTING " << inc[k] << endl;
+                    insert_nearest(inc[k], hull, added, after);
                 }
             }
         }

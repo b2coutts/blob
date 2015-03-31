@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
             std::stringstream out_filename;
             out_filename << combfile_base << "_" << comb_number
                 << "_" << set_number << ".png";
+            cout << out_filename.str() << endl;
             draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii, out_filename.str().c_str());
             curtime("after draw");
         }
