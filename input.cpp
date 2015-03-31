@@ -42,6 +42,10 @@ read_cook_data(istream &data_file, istream &comb_file) {
     size_t num_points;
     data_file >> num_points;
 
+    if(!data_file){
+        cerr << "Invalid data file!" << endl;
+        exit(1);
+    }
     points.reserve(num_points);
 
     for(size_t i = 0; i < num_points; i++) {
@@ -60,8 +64,8 @@ read_cook_data(istream &data_file, istream &comb_file) {
         for(size_t i = 0; i < comb_size; i++) {
             size_t set_size;
             vector<size_t> set;
-            set.reserve(set_size);
             comb_file >> set_size;
+            set.reserve(set_size);
             for(size_t j = 0; j < set_size; j++) {
                 size_t index;
                 comb_file >> index;
