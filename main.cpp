@@ -78,10 +78,6 @@ int main(int argc, char *argv[]) {
 
         int set_number = -1;
         for(vector< size_t > comb_set : comb) {
-            if(comb_set.size() < 3) {
-                cerr << "Nope, not touching the small sets" << endl;
-                continue;
-            }
             set_number ++;
             vector< spoint > included, excluded;
             for(spoint& p : points) {

@@ -252,6 +252,7 @@ pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb
 // TODO: maybe iterate more efficiently, instead of going *all* the way back to
 // the beginning every time something is removed
 void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
+    if(poly.size() == 2) {return;}
     bool removed_pt = false;
     spoint lastpt = poly.back();
     int idx = 0;
