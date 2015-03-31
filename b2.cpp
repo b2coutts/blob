@@ -29,7 +29,7 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
     vec2d nrml = rotccw(stv(*min_idx) - stv(*end), PI/2);
     nrml = scale(1/norm(nrml), nrml);
     double min = abs( inner(nrml, stv(p) - stv(*end)) );
-    cout << "  init min: " << *min_idx << " with OV=" << min << endl;
+    //cout << "  init min: " << *min_idx << " with OV=" << min << endl;
     for(j = poly.begin(); j != end; ++j){
         list<spoint>::iterator next = j; ++next;
 
@@ -39,11 +39,11 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
         if(obj_val < min){
             min = obj_val;
             min_idx = next;
-            cout << "  WINNER: " << *min_idx << " w/ OV=" << obj_val << endl;
+            //cout << "  WINNER: " << *min_idx << " w/ OV=" << obj_val << endl;
         }
     }
 
-    cout << "   ACTUAL INSERT: " << p << " into " << *min_idx << endl;
+    //cout << "   ACTUAL INSERT: " << p << " into " << *min_idx << endl;
 
     return poly.insert(min_idx, p);
 }
