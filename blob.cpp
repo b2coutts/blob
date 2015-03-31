@@ -20,7 +20,7 @@ const double EPSILON = 0.001;
 
 vector<spoint> find_hull(vector<spoint> &included, vector<spoint> &excluded)
 {
-    list<spoint> tmp = giftwrap(included, excluded);
+    list<spoint> tmp = giftwrap(included);
     vector<spoint> hull {tmp.begin(), tmp.end()};
 
 
@@ -161,9 +161,10 @@ list<Triangle> starburst_fix(spoint center, vector<spoint>& hull, vector<spoint>
     return triangles;
 }
 
-list<spoint> giftwrap(vector<spoint> &included, vector<spoint> &excluded) {
+list<spoint> giftwrap(const vector<spoint> &included) {
     // http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
     list<spoint> inc(included.begin(), included.end());
+    if(inc.size() == 2) { return inc; }
     double leftmost = numeric_limits<double>::max();
     int leftmost_index = -1;
 
