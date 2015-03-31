@@ -37,7 +37,10 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
         nrml = rotccw(stv(*next) - stv(*j), PI/2);
         nrml = scale(1/norm(nrml), nrml);
         double obj_val = abs( inner(nrml, stv(p) - stv(*next)) );
-        if(obj_val < min){
+        vec2d linedir = stv(*next) - stv(*j);
+        if(obj_val < min &&
+           inner(linedir, stv(p)-stv(*j)) > 0 &&
+           inner(linedir, stv(*next)-stv(p)) > 0){
             min = obj_val;
             min_idx = next;
             //cout << "  WINNER: " << *min_idx << " w/ OV=" << obj_val << endl;
