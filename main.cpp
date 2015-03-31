@@ -100,7 +100,5 @@ int main(int argc, char *argv[]) {
             draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii, out_filename.str().c_str());
             curtime("after draw");
         }
-        // Only draw the first comb.
-        break;
     }
 }
