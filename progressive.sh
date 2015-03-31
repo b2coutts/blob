@@ -1,18 +1,30 @@
-#!/bin/bash
+#!/bin/bash -e
 # hacky bash script to incrementally run parts of the code to show progress
+# should only be used on comb_files with one comb that has one set
 
-if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 input_file output_basename"
+if [ "$#" -lt 3 ]; then
+    echo "Usage: $0 point_file comb_file output_basename"
     exit 1
 fi
-infile="$1"
-outname="$2"
+pointfile="$1"
+combfile="$2"
+outname="$3"
 
 # function changes a config parameter in config.h to the given value
 function chparam () {
     param="$1"
     val="$2"
     sed -i "s/$1 .*/$1 $2/" config.h
+}
+
+# function to run with the current config file
+function runcode () {
+    n="$1"
+    make
+    mkdir -p "progout/$outname"
+    echo ./draw "$pointfile" "$combfile" "progout/$outname/foo"
+    ./draw "$pointfile" "$combfile" "progout/$outname/foo"
+    mv "progout/$outname/foo_0_0.png" "progout/$outname/$n.png"
 }
 
 # ordered list of parameters to change
@@ -28,22 +40,15 @@ done
 
 # incrementally generate images
 n=1
-mkdir -p imgs/$outname
-make
-echo ./draw "$infile" "imgs/$outname/${n}.png"
-./draw "$infile" "imgs/$outname/${n}.png"
+runcode "$n"
 for i in $params; do
     n=$((n+1))
     chparam "$i" "true"
-    make
-    echo ./draw "$infile" "imgs/$outname/${n}.png"
-    ./draw "$infile" "imgs/$outname/${n}.png"
+    runcode "$n"
 done
 n=$((n+1))
 chparam "DRAW_POLYGON" "false"
-make
-echo ./draw "$infile" "imgs/$outname/${n}.png"
-./draw "$infile" "imgs/$outname/${n}.png"
+runcode "$n"
 
 # restore old config file
 mv config.h.bak config.h
