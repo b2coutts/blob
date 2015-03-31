@@ -17,6 +17,23 @@ const double TAU = 6.28318530718;
 
 double avg_scale;
 
+void cairo_set_source_color(cairo_t *cr, color c) {
+  cairo_set_source_rgba (cr, c.r, c.g, c.b, c.a);
+}
+
+
+std::pair<cairo_t*, cairo_surface_t*> draw_init(int width, int height) {
+    cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    return {cairo_create(surface), surface};
+}
+void draw_end(cairo_t *cr, cairo_surface_t* surface, const char* filename) {
+  // TODO: error checking on filename
+  cairo_surface_write_to_png(surface, filename);
+
+  cairo_destroy(cr);
+  cairo_surface_destroy(surface);
+}
+
 void draw(int width, int height,
         vector<spoint> &hull,
         vector<spoint> &inpoints,
@@ -54,7 +71,7 @@ void draw(int width, int height,
   if(DRAW_POINTS) draw_points(cr, expoints, POINT_RADIUS / avg_scale);
 
   cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.3);
-  if(DRAW_BLOB) draw_with_smoothed_lines(cr, hull, inpoints, expoints, radii);
+  if(DRAW_BLOB) draw_with_smoothed_lines(cr, hull, radii);
 
   cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
   cairo_set_line_width(cr, AXIS_THICKNESS / avg_scale);
@@ -62,12 +79,70 @@ void draw(int width, int height,
 
   // End actual code
 
+  draw_end(cr, surface, filename);
+  return;
+}
 
-  // TODO: error checking on filename
-  cairo_surface_write_to_png(surface, filename);
 
-  cairo_destroy(cr);
-  cairo_surface_destroy(surface);
+
+void draw_many_blobs(
+        int width, int height,
+        const char *filename,
+        const std::vector<spoint> &points,
+        const std::list< std::vector<spoint> > &hulls,
+        const std::list< std::vector<double> > &radiii,
+        const std::vector< color > &colors
+        ) {
+
+
+    auto p = draw_init(width, height);
+    cairo_t *cr = p.first;
+    cairo_surface_t * surface = p.second;
+    scale_world(cr, 1.1, width, height, points, points);
+
+    cairo_set_line_width(cr, 0.02);
+
+    if(DRAW_POINTS) {
+        cairo_set_source_rgba(cr, 0, 0, 0, 1);
+        draw_points(cr, points, POINT_RADIUS / avg_scale);
+    }
+    if(DRAW_AXES){
+        cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.6);
+        cairo_set_line_width(cr, AXIS_THICKNESS / avg_scale);
+        draw_axis(cr);
+    }
+    auto hull_it = hulls.cbegin();
+    auto radiii_it = radiii.cbegin();
+    for(size_t i = 0;
+
+        hull_it != hulls.cend() &&
+        radiii_it != radiii.cend() &&
+        i < colors.size();
+
+        hull_it++, radiii_it++, i++)
+    {
+        draw_blob(cr, *hull_it, *radiii_it, colors[i]);
+    }
+
+    draw_end(cr, surface, filename);
+}
+
+void draw_blob(cairo_t *cr,
+        const std::vector<spoint> &hull,
+        const std::vector<double> &radii,
+        const color &fill_color
+        )
+{
+  cairo_set_source_color(cr, fill_color);
+  cairo_set_line_width(cr, POLY_THICKNESS / avg_scale);
+  if(DRAW_POLYGON){
+      draw_with_lines(cr, hull);
+  }
+
+  if(DRAW_BLOB) {
+      cairo_set_source_color(cr, fill_color);
+      draw_with_smoothed_lines(cr, hull, radii);
+  }
 
   return;
 }
@@ -134,13 +209,12 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
 }
 
 void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
-                             vector<spoint> &inpoints, vector<spoint> &expoints,
-                             vector<double> &radii)
+                             const vector<double> &radii)
 {
     cairo_new_path(cr);
 
     // macro for outputting an angle in degrees
-    #define deg(x) (x*360 / TAU)
+    const auto deg = [](double x) { return x*360 / TAU; };
 
     // TODO: assumes clockwise convex hull (for last arg)
     double previous_angle;
