@@ -119,17 +119,20 @@ int main(int argc, char *argv[]) {
             std::stringstream out_filename;
             out_filename << combfile_base << "_" << comb_number
                 << "_" << set_number << ".png";
+            cerr << "Drawing to " << out_filename.str() << endl;
             draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii, out_filename.str().c_str());
             curtime("after draw");
+            cerr << endl;
         }
         std::stringstream out_filename;
         out_filename << combfile_base << "_" << comb_number << ".png";
-        cerr << out_filename << endl;
+        cerr << endl << out_filename.str() << endl;
         draw_many_blobs(OUTPUT_IMG_WIDTH, OUTPUT_IMG_HEIGHT,
                 out_filename.str().c_str(),
                 points,
                 comb_hulls,
                 comb_radiii,
                 fill_colors);
+        cerr << endl;
     }
 }

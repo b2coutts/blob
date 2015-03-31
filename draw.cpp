@@ -217,6 +217,13 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
 {
     cairo_new_path(cr);
 
+    /*
+    cerr << "Drawing points " << endl;
+    for(auto& s : points) {
+        cerr << s << ", ";
+    }
+    cerr << endl << endl;
+    */
     // macro for outputting an angle in degrees
     const auto deg = [](double x) { return x*360 / TAU; };
 
@@ -236,10 +243,10 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
         double a_rad = radii[i % points.size()];
         double b_rad = radii[(i+1) % points.size()];
 
-        //cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
-             //<< ", " << ") = ";
+        // cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
+        //     << ", " << ") = ";
         dpair = smooth_line_angle(a, b, a_rad, b_rad);
-        //cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
+        // cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
 
         if(a.inblob){
             cout << "cairo_arc_negative(" << a.x << "," << a.y << "," << a_rad << ","
