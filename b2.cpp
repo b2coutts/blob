@@ -42,6 +42,7 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly){
 // compute the "fixed" polygon
 list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
     list<spoint> hull = giftwrap(inc, exc);
+    cout << "after giftwrap: "; print_poly(hull);
     if(!RUN_FIX_HULL) return hull;
 
     for(int i = 0; i < exc.size(); i++){
@@ -61,7 +62,11 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
             for(int k = 0; k < inc.size(); k++){
                 if(point_inside_triangle(inc[k], *before, *added, *after) &&
                    !point_inside(inc[k], hull)){
-                    insert_nearest(inc[k], hull);
+                    auto ins_idx = added;
+                    if(dist(stv(inc[k]), stv(*before)) >
+                       dist(stv(inc[k]), stv(*after)))
+                        ins_idx = after;
+                    hull.insert(ins_idx, inc[k]);
                 }
             }
         }
