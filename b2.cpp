@@ -26,14 +26,20 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
                                       const list<spoint>::iterator end){
     list<spoint>::iterator min_idx = start;
     list<spoint>::iterator j;
-    double min = dist(*min_idx, p) + dist(*end, p);
+    vec2d nrml = rotccw(stv(*min_idx) - stv(*end), PI/2);
+    nrml = scale(1/norm(nrml), nrml);
+    double min = abs( inner(nrml, stv(p) - stv(*end)) );
+    cout << "  init min: " << *min_idx << " with OV=" << min << endl;
     for(j = poly.begin(); j != end; ++j){
         list<spoint>::iterator next = j; ++next;
 
-        double sum = dist(*j, p) + dist(*next, p);
-        if(sum < min){
-            min = sum;
+        nrml = rotccw(stv(*next) - stv(*j), PI/2);
+        nrml = scale(1/norm(nrml), nrml);
+        double obj_val = abs( inner(nrml, stv(p) - stv(*next)) );
+        if(obj_val < min){
+            min = obj_val;
             min_idx = next;
+            cout << "  WINNER: " << *min_idx << " w/ OV=" << obj_val << endl;
         }
     }
 
