@@ -21,7 +21,7 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc);
 pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb);
 
 // refine a single line of a given polygon
-void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
+bool refine_line(list<spoint> &poly, list<spoint>::iterator ia,
                  list<spoint>::iterator ib, vector<spoint> &inc,
                  vector<spoint> &exc, double *incdists, double *excdists);
 

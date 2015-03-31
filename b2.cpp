@@ -4,6 +4,7 @@
 #include "b2.h"
 #include "config.h"
 
+    #include <assert.h>
 #include <iostream>
 #include <algorithm>
 #include <limits>
@@ -97,7 +98,8 @@ bool inner_cmp(spoint u, spoint v){
 // TODO: there's an issue where, if a point is close to two edges, being close
 // to an opposing point across one edge will make its disc small on the other
 // side as well, even though this is undesirable
-void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
+// Returns true iff it made a change
+bool refine_line(list<spoint> &poly, list<spoint>::iterator ia,
                  list<spoint>::iterator ib, vector<spoint> &inc,
                  vector<spoint> &exc, double *incdists, double *excdists){
     vec2d a = stv(*ia);
@@ -106,22 +108,25 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
     vec2d dir = b - a;
     // normal vector to dir, pointing outside of poly
     vec2d nrml = rotccw(dir, PI/2); // TODO: requires that &poly is clockwise
-    vector<spoint> pts;
+
+    // get the vector which is closest to the line
+    int min_idx = -1;
+    bool is_inc = true;
+    double mindist = numeric_limits<double>::max();
     for(int i = 0; i < inc.size(); i++){
-        // TODO: efficiency: maybe filter out vertices instead of checking each time
         bool inpoly = false;
         for(auto &pt : poly){
             if(pt == inc[i]) inpoly = true;
         }
 
-        // TODO: we can adjust these thresholds (in particular the dist
-        // thresholds) to make it look nicer
         if(!inpoly &&
-           inner(nrml, a-stv(inc[i])) < incdists[i] * REFINE_EPSILON &&
-           inner(nrml, a-stv(inc[i])) > 0 &&
            inner(dir, stv(inc[i])-a) > 0 &&
            inner(dir, b-stv(inc[i])) > 0){
-            pts.push_back(inc[i]);
+            double dist = abs( inner(nrml, stv(inc[i]) - a) );
+            if(dist < mindist){
+                mindist = dist;
+                min_idx = i;
+            }
         }
     }
 
@@ -131,31 +136,29 @@ void refine_line(list<spoint> &poly, list<spoint>::iterator ia,
             if(pt == exc[i]) inpoly = true;
         }
 
-        // TODO: we can adjust these thresholds (in particular the dist
-        // thresholds) to make it look nicer
         if(!inpoly &&
-           inner(nrml, stv(exc[i])-a) < excdists[i] &&
-           inner(nrml, stv(exc[i])-a) > 0 &&
            inner(dir, stv(exc[i])-a) > 0 &&
            inner(dir, b-stv(exc[i])) > 0){
-            pts.push_back(exc[i]);
+            double dist = abs( inner(nrml, stv(exc[i]) - a) );
+            if(dist < mindist){
+                mindist = dist;
+                min_idx = i;
+                is_inc = false;
+            }
         }
     }
+    if(min_idx == -1) return false;
 
-    if(pts.empty()) return;
-
-    cmp_vec = dir;
-    sort(pts.begin(), pts.end(), inner_cmp);
-    for(int i = 0; i < pts.size(); i++){
-        list<spoint>::iterator iter = poly.insert(ib, pts[i]);
-        
-        // TODO: remove these lines
-        list<spoint>::iterator prev, next;
-        prev = next = iter;
-        --prev; ++next;
-        // TODO: double-check that this actually works
-        refine_line(poly, iter, ib, inc, exc, incdists, excdists);
+    spoint p = is_inc ? inc[min_idx] : exc[min_idx];
+    double delta = is_inc ? incdists[min_idx] : excdists[min_idx];
+    assert(abs(abs(inner(nrml, stv(p)-a)) - mindist) < 0.01);
+    if(mindist < delta * REFINE_EPSILON){
+        cout << "inserting " << p << " behind " << *ib << ", OV=" << mindist
+             << endl;
+        poly.insert(ib, p);
+        return true;
     }
+    return false;
 }
 
 // given a fixed polygon, refine each of its lines
@@ -185,13 +188,22 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         excdists[i] = min;
     }
 
-    for(auto i = poly.begin(); i != poly.end(); ++i){
-        list<spoint>::iterator next = i; ++next;
-        if(next != poly.end()){
-            refine_line(poly, i, next, inc, exc, incdists, excdists);
-        }else{
-            refine_line(poly, i, poly.begin(), inc, exc, incdists, excdists);
+    while(true){
+        for(auto i = poly.begin(); i != poly.end(); ++i){
+            list<spoint>::iterator next = i; ++next;
+            bool changed = false;
+            if(next != poly.end()){
+                changed = refine_line(poly, i, next, inc, exc, incdists,
+                                      excdists);
+            }else{
+                changed = refine_line(poly, i, poly.begin(), inc, exc, incdists,
+                                      excdists);
+            }
+            if(changed) goto restart;
         }
+
+        break;
+        restart: true;
     }
 
     free(incdists);
@@ -258,8 +270,10 @@ vector <double> get_radii(const vector<spoint> &points, vector<spoint> &inpoints
 // v), calculates the angles (from sa,sb repsectively) at which to draw a
 // smooth line from the circle around sa to the circle around sb
 pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb){
+    //cout << "INFO: sa,sb,ra,rb are " << sa << sb << ra << rb << endl;
     vec2d c = smooth_line_normal(sa, sb, ra, rb);
     double theta = atan2(c.y,c.x);
+    //cout << "INFO: theta,cy,cx are " << theta << "," << c.y << "," << c.x << endl;
     return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
 }
 
