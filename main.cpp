@@ -93,10 +93,22 @@ int main(int argc, char *argv[]) {
                     excluded.push_back(p);
                 }
             }
+            cerr << "Starting on comb: " << comb_number << ", set: "
+                 << set_number << endl;
+            cerr << "With " << included.size() << " points." << endl;
+            for(auto &p : included) {
+                cerr << p << ", ";
+            }
+            cerr << endl;
 
             list<spoint> fixed = fixed_hull(included, excluded);
             curtime("after fixed_hull");
             cout << "after fixed_hull: "; print_poly(fixed);
+
+            if(fixed.size() == 1) {
+                cerr << "Failed to create comb set "<< comb_number << ", " << set_number << endl;
+                continue;
+            }
 
             if(RUN_REFINE_POLY){
                 refine_poly(fixed, included, excluded);
