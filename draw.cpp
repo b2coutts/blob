@@ -142,6 +142,10 @@ void draw_blob(cairo_t *cr,
   if(DRAW_BLOB) {
       cairo_set_source_color(cr, fill_color);
       draw_with_smoothed_lines(cr, hull, radii);
+      cairo_fill_preserve(cr);
+      cairo_set_source_rgba (cr, fill_color.r, fill_color.g, fill_color.b,
+              0.8);
+      cairo_stroke(cr);
   }
 
   return;
@@ -250,9 +254,6 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
         previous_angle = dpair.second;
     }
     cairo_close_path(cr);
-    cairo_fill_preserve(cr);
-    cairo_set_source_rgba (cr, 0.2, 1, 0.2, 0.8);
-    cairo_stroke(cr);
 }
 void draw_with_smoothed_lines_counterclockwise(cairo_t *cr, const vector<spoint> &points)
 {
