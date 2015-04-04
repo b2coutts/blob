@@ -79,6 +79,20 @@ void draw(int width, int height,
   if(DRAW_BLOB) {
       cairo_set_source_color(cr, fill_color);
       draw_with_smoothed_lines(cr, hull, radii);
+      for(const spoint& expoint : expoints) {
+          if(cairo_in_stroke(cr, expoint.x, expoint.y) ) {
+             cerr << "WARNING: FAILURE to keep excluded point " << expoint
+                  << " out of the hull!" << endl;
+          }
+      }
+      /*
+      for(const spoint& inpoint : inpoints) {
+          if(! cairo_in_stroke(cr, inpoint.x, inpoint.y) ) {
+             cerr << "WARNING: FAILURE to keep included point " << inpoint
+                  << " in the hull!" << endl;
+          }
+      }
+      */
       cairo_fill_preserve(cr);
       cairo_set_source_rgba (cr, fill_color.r, fill_color.g, fill_color.b,
               0.8);
