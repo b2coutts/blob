@@ -17,3 +17,8 @@ actually in the bounding box of the line (i.e., is between a and by by (a-b)^T)
   point to the line, and reiterate (so the points can be added to either new
   half of the broken line)
     - less efficient, but probably better
+
+BUG: comb 34, set 11
+    - seems to a problem with detecting crossovers; the second pair of blue
+      points crosses over "behind" the first line. Could maybe fix by figuring
+      out which side of the line it's not allowed to be on.
