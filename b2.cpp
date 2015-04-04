@@ -4,10 +4,11 @@
 #include "b2.h"
 #include "config.h"
 
-    #include <assert.h>
+#include <assert.h>
 #include <iostream>
 #include <algorithm>
 #include <limits>
+#include <cmath>
 
 #define PI 3.14159265358979323846
 
