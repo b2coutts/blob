@@ -165,53 +165,51 @@ bool refine_line(list<spoint> &poly, list<spoint>::iterator ia,
     return false;
 }
 
+// given a point p which is not a vertex of poly, find the line of poly closest
+// to p; return the iterator of the second polytope vertex defining the line,
+// and insert it there if it is sufficiently close. Return true iff it was
+// inserted somewhere
+bool closest_line(list<spoint> &poly, spoint p){
+    vec2d v = stv(p);
+    double mindist = numeric_limits<double>::max();
+    list<spoint>::iterator min_it;
+    // find nearest line
+    for(auto vtx = poly.begin(); vtx != poly.end(); ++vtx){
+        list<spoint>::iterator next = vtx; ++next;
+        if(next == poly.end()) next = poly.begin();
+
+        vec2d nrml = smooth_line_normal(*vtx, *next, (*vtx).radius, (*next).radius);
+        vec2d a = stv(*vtx)+nrml;
+        vec2d b = stv(*next) + ((*vtx).inblob == (*next).inblob ? nrml : -nrml);
+        double dist = abs( inner(nrml, v-a) );
+        if(dist < mindist){
+            mindist = dist;
+            min_it = next;
+        }
+    }
+    
+    // insert if sufficiently close
+    if(mindist < p.radius){
+        poly.insert(min_it, p);
+        return true;
+    }
+    return false;
+}
+
+
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
-    // calculate minimum distances from each point to a point of opposite
-    // inblob type
-    // TODO: new or other?
-    double *incdists = new double[inc.size()];
-    double *excdists = new double[exc.size()];
-    double min;
-
-    for(int i = 0; i < inc.size(); i++){
-        min = numeric_limits<double>::max();
-        for(int j = 0; j < exc.size(); j++){
-            double d = dist(inc[i], exc[j]);
-            if(d < min) min = d;
-        }
-        incdists[i] = min;
-    }
-
-    for(int i = 0; i < exc.size(); i++){
-        min = numeric_limits<double>::max();
-        for(int j = 0; j < inc.size(); j++){
-            double d = dist(exc[i], inc[j]);
-            if(d < min) min = d;
-        }
-        excdists[i] = min;
-    }
-
-    while(true){
-        for(auto i = poly.begin(); i != poly.end(); ++i){
-            list<spoint>::iterator next = i; ++next;
-            bool changed = false;
-            if(next != poly.end()){
-                changed = refine_line(poly, i, next, inc, exc, incdists,
-                                      excdists);
-            }else{
-                changed = refine_line(poly, i, poly.begin(), inc, exc, incdists,
-                                      excdists);
+    auto pts = inc;
+    for(int i = 0; i < 1; i++){
+        for(auto &pt : pts){
+            bool retval = closest_line(poly, pt);
+            if(retval){
+                refine_poly(poly, inc, exc);
+                return;
             }
-            if(changed) goto restart;
         }
-
-        break;
-        restart: true;
+        pts = exc;
     }
-
-    free(incdists);
-    free(excdists);
 }
 
 // normalizes an angle to be within [0,2*PI)
