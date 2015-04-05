@@ -3,3 +3,4 @@ draw
 image.png
 .*.swp
 imgs
+report/out/*
