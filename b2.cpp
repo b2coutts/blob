@@ -261,11 +261,15 @@ bool closest_line(list<spoint> &poly, spoint p){
         list<spoint>::iterator next = vtx; ++next;
         if(next == poly.end()) next = poly.begin();
 
+        vec2d poly_nrml = rotccw(stv(*next) - stv(*vtx), PI/2);
+
         vec2d nrml = smooth_line_normal(*vtx, *next, (*vtx).radius, (*next).radius);
         vec2d a = stv(*vtx) + scale((*vtx).radius, nrml);
         vec2d b = stv(*next) + scale((*next).radius,
                                 ((*vtx).inblob == (*next).inblob ? nrml : -nrml));
-        double dist = abs( inner(nrml, v-a) );
+        double dist = inner(nrml, v-a);
+        if(dist < 0 && inner(poly_nrml, v-stv(*next)) < 0) continue;
+        if(inner(b-a, v-a) < 0 || inner(b-a, v-b) > 0) continue;
         if(dist < mindist){
             mindist = dist;
             min_it = next;
