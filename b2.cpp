@@ -262,12 +262,15 @@ bool closest_line(list<spoint> &poly, spoint p){
         if(next == poly.end()) next = poly.begin();
 
         vec2d nrml = smooth_line_normal(*vtx, *next, (*vtx).radius, (*next).radius);
-        vec2d a = stv(*vtx)+nrml;
-        vec2d b = stv(*next) + ((*vtx).inblob == (*next).inblob ? nrml : -nrml);
+        vec2d a = stv(*vtx) + scale((*vtx).radius, nrml);
+        vec2d b = stv(*next) + scale((*next).radius,
+                                ((*vtx).inblob == (*next).inblob ? nrml : -nrml));
         double dist = abs( inner(nrml, v-a) );
         if(dist < mindist){
             mindist = dist;
             min_it = next;
+            //cout << "new mindist: p=" << p << ", min_it= " << *min_it
+                 //<< ", dist=" << dist << endl;
         }
     }
     
@@ -275,6 +278,8 @@ bool closest_line(list<spoint> &poly, spoint p){
     cout << "pt is " << p << ", mindist is " << mindist << ", rad is "
          << p.radius << endl;
     if(mindist < p.radius){
+        auto db_it = min_it; --db_it;
+        cout << "INSERTING " << p << " between " << *db_it << " and " << *min_it << endl;
         poly.insert(min_it, p);
         return true;
     }
@@ -284,11 +289,11 @@ bool closest_line(list<spoint> &poly, spoint p){
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     auto pts = inc;
-    for(int i = 0; i < 1; i++){
+    for(int i = 0; i < 2; i++){
         for(auto &pt : pts){
             // make sure point is not already in polygon
             bool inpoly = false;
-            for(auto &pt2 : pts){
+            for(auto &pt2 : poly){
                 if(pt == pt2) inpoly = true;
             }
             if(inpoly) continue;
