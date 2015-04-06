@@ -1,3 +1,4 @@
+
 #include "types.h"
 #include "blob.h"
 #include "vec2d.h"
@@ -198,28 +199,41 @@ vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
 // situations where we can decide we don't need to?
 void get_radii(list<spoint> &points, vector<spoint> &inpoints,
                vector<spoint> &expoints){
-    vector<spoint> pv = inpoints;
-    for(int a = 0; a < 2; a++){
-        for(int i = 0; i < pv.size(); i++){
-            pv[i].radius = numeric_limits<double>::max();
-            for(auto &x : inpoints){
-                if(x == pv[i]) continue;
-                pv[i].radius = min(pv[i].radius, dist(stv(pv[i]), stv(x)));
-            }
-            for(auto &x : expoints){
-                if(x == pv[i]) continue;
-                pv[i].radius = min(pv[i].radius, dist(stv(pv[i]), stv(x)));
-            }
-            pv[i].radius /= MINDIST_RADIUS_FACTOR;
-            cout << "chosen rad: " << pv[i].radius << endl;
-
-            // TODO: lazy expensive pass to populate the radii in the polytope
-            for(auto &pt : points){
-                if(pt == pv[i]) pt.radius = pv[i].radius;
-            }
+    for(int i = 0; i < inpoints.size(); i++){
+        inpoints[i].radius = numeric_limits<double>::max();
+        for(auto &x : inpoints){
+            if(x == inpoints[i]) continue;
+            inpoints[i].radius = min(inpoints[i].radius, dist(stv(inpoints[i]), stv(x)));
         }
-        pv = expoints;
+        for(auto &x : expoints){
+            if(x == inpoints[i]) continue;
+            inpoints[i].radius = min(inpoints[i].radius, dist(stv(inpoints[i]), stv(x)));
+        }
+        inpoints[i].radius /= MINDIST_RADIUS_FACTOR;
 
+        // TODO: lazy expensive pass to populate the radii in the polytope
+        for(auto &pt : points){
+            if(pt == inpoints[i]) pt.radius = inpoints[i].radius;
+        }
+    }
+
+    // repeat for expoints
+    for(int i = 0; i < expoints.size(); i++){
+        expoints[i].radius = numeric_limits<double>::max();
+        for(auto &x : inpoints){
+            if(x == expoints[i]) continue;
+            expoints[i].radius = min(expoints[i].radius, dist(stv(expoints[i]), stv(x)));
+        }
+        for(auto &x : expoints){
+            if(x == expoints[i]) continue;
+            expoints[i].radius = min(expoints[i].radius, dist(stv(expoints[i]), stv(x)));
+        }
+        expoints[i].radius /= MINDIST_RADIUS_FACTOR;
+
+        // TODO: lazy expensive pass to populate the radii in the polytope
+        for(auto &pt : points){
+            if(pt == expoints[i]) pt.radius = expoints[i].radius;
+        }
     }
 }
 
@@ -258,6 +272,8 @@ bool closest_line(list<spoint> &poly, spoint p){
     }
     
     // insert if sufficiently close
+    cout << "pt is " << p << ", mindist is " << mindist << ", rad is "
+         << p.radius << endl;
     if(mindist < p.radius){
         poly.insert(min_it, p);
         return true;

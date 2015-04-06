@@ -98,12 +98,6 @@ int main(int argc, char *argv[]) {
 
             get_radii(fixed, included, excluded);
             curtime("after calculating radii");
-            for(int i = 0; i < included.size(); i++){
-                cout << included[i] << " radius is " << included[i].radius << endl;
-            }
-            for(int i = 0; i < excluded.size(); i++){
-                cout << excluded[i] << " radius is " << excluded[i].radius << endl;
-            }
 
             if(RUN_REFINE_POLY){
                 refine_poly(fixed, included, excluded);
