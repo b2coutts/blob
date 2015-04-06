@@ -29,12 +29,12 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
                                       const list<spoint>::iterator end){
     list<spoint>::iterator min_idx = start;
     list<spoint>::iterator j;
-    vec2d nrml = rotccw(stv(*min_idx) - stv(*end), PI/2);
-    nrml = scale(1/norm(nrml), nrml);
-    double min = abs( inner(nrml, stv(p) - stv(*end)) );
+    vec2d nrml;
+    double min = numeric_limits<double>::max();
     //cout << "  init min: " << *min_idx << " with OV=" << min << endl;
-    for(j = poly.begin(); j != end; ++j){
+    for(j = start; j != end; ++j){
         list<spoint>::iterator next = j; ++next;
+        if(next == end) next = start;
 
         nrml = rotccw(stv(*next) - stv(*j), PI/2);
         nrml = scale(1/norm(nrml), nrml);
@@ -49,7 +49,9 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
         }
     }
 
-    //cout << "   ACTUAL INSERT: " << p << " into " << *min_idx << endl;
+    //auto db_idx = min_idx; if(min_idx == poly.begin()) db_idx = poly.end(); --db_idx;
+    //cout << "fixed_hull inserts " << p << " between " << *db_idx << " and " <<
+             //*min_idx << endl;
 
     return poly.insert(min_idx, p);
 }
