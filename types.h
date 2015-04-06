@@ -4,12 +4,13 @@
 #include <math.h>
 
 struct spoint {
-    spoint(double x, double y, bool inblob) :
-        x(x), y(y), inblob(inblob) {};
+    spoint(double x, double y, bool inblob, double radius) :
+        x(x), y(y), inblob(inblob), radius(radius) {};
     spoint() = default;
     ~spoint() = default;
     double x, y;
     bool inblob;
+    double radius;
 };
 
 inline bool operator==(const spoint &l, const spoint &r) {

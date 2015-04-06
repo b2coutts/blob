@@ -165,6 +165,75 @@ bool refine_line(list<spoint> &poly, list<spoint>::iterator ia,
     return false;
 }
 
+// normalizes an angle to be within [0,2*PI)
+double normalize(double theta){
+    while(theta < -PI) theta += 2*PI;
+    while(theta >= PI) theta-= 2*PI;
+    return theta;
+}
+
+// like smooth_line_angle, but computes the normal vector c
+vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
+    vec2d a = stv(sa);
+    vec2d b = stv(sb);
+    vec2d u = b - a;
+    double nrm = norm(u);
+    vec2d w = scale(1.0/nrm, u); // normalized u
+    double delta = (ra - rb)/nrm;
+    if(sa.inblob != sb.inblob) delta = (ra + rb)/nrm;
+
+    vec2d v = rotccw(b-a, PI/2);
+    
+    // calculate normal vector to line. Recalculate if the line is on the wrong
+    // side of the circles
+    vec2d c;
+    if(sa.inblob)  c = rotccw(w, acos(delta));
+    else            c = rotccw(w, 2*PI - acos(delta));
+
+    return c;
+}
+
+// calculate the radius of each vertex
+// TODO: should this count *all* points of the same inblob type? Are there
+// situations where we can decide we don't need to?
+void get_radii(list<spoint> &points, vector<spoint> &inpoints,
+               vector<spoint> &expoints){
+    vector<spoint> pv = inpoints;
+    for(int a = 0; a < 2; a++){
+        for(int i = 0; i < pv.size(); i++){
+            pv[i].radius = numeric_limits<double>::max();
+            for(auto &x : inpoints){
+                if(x == pv[i]) continue;
+                pv[i].radius = min(pv[i].radius, dist(stv(pv[i]), stv(x)));
+            }
+            for(auto &x : expoints){
+                if(x == pv[i]) continue;
+                pv[i].radius = min(pv[i].radius, dist(stv(pv[i]), stv(x)));
+            }
+            pv[i].radius /= MINDIST_RADIUS_FACTOR;
+            cout << "chosen rad: " << pv[i].radius << endl;
+
+            // TODO: lazy expensive pass to populate the radii in the polytope
+            for(auto &pt : points){
+                if(pt == pv[i]) pt.radius = pv[i].radius;
+            }
+        }
+        pv = expoints;
+
+    }
+}
+
+// for consecutive points sa,sb, with radii ra,rb, (with outward normal vector
+// v), calculates the angles (from sa,sb repsectively) at which to draw a
+// smooth line from the circle around sa to the circle around sb
+pair<double,double> smooth_line_angle(spoint sa, spoint sb){
+    //cout << "INFO: sa,sb,ra,rb are " << sa << sb << ra << rb << endl;
+    vec2d c = smooth_line_normal(sa, sb, sa.radius, sb.radius);
+    double theta = atan2(c.y,c.x);
+    //cout << "INFO: theta,cy,cx are " << theta << "," << c.y << "," << c.x << endl;
+    return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
+}
+
 // given a point p which is not a vertex of poly, find the line of poly closest
 // to p; return the iterator of the second polytope vertex defining the line,
 // and insert it there if it is sufficiently close. Return true iff it was
@@ -196,7 +265,6 @@ bool closest_line(list<spoint> &poly, spoint p){
     return false;
 }
 
-
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     auto pts = inc;
@@ -212,72 +280,6 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     }
 }
 
-// normalizes an angle to be within [0,2*PI)
-double normalize(double theta){
-    while(theta < -PI) theta += 2*PI;
-    while(theta >= PI) theta-= 2*PI;
-    return theta;
-}
-
-// like smooth_line_angle, but computes the normal vector c
-vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
-    vec2d a = stv(sa);
-    vec2d b = stv(sb);
-    vec2d u = b - a;
-    double nrm = norm(u);
-    vec2d w = scale(1.0/nrm, u); // normalized u
-    double delta = (ra - rb)/nrm;
-    if(sa.inblob != sb.inblob) delta = (ra + rb)/nrm;
-
-    vec2d v = rotccw(b-a, PI/2);
-    
-    // calculate normal vector to line. Recalculate if the line is on the wrong
-    // side of the circles
-    vec2d c;
-    if(sa.inblob)  c = rotccw(w, acos(delta));
-    else            c = rotccw(w, 2*PI - acos(delta));
-
-    return c;
-}
-
-// calculate the radius of a single vertex
-double vertex_radius(spoint v, vector<spoint> &inpoints,
-                             vector<spoint> &expoints){
-    double rad = numeric_limits<double>::max();
-    for(auto &x : inpoints){
-        if(x == v) continue;
-        rad = min(rad, norm(stv(v) - stv(x)));
-    }
-    for(auto &x : expoints){
-        if(x == v) continue;
-        rad = min(rad, norm(stv(v) - stv(x)));
-    }
-    rad /= MINDIST_RADIUS_FACTOR;
-    return rad;
-}
-
-// calculate the radius of each vertex
-// TODO: should this count *all* points of the same inblob type? Are there
-// situations where we can decide we don't need to?
-vector <double> get_radii(const vector<spoint> &points, vector<spoint> &inpoints,
-                      vector<spoint> &expoints){
-    vector<double> radii(points.size());
-    for(int i = 0; i < points.size(); i++){
-        radii[i] = vertex_radius(points[i], inpoints, expoints);
-    }
-    return radii;
-}
-
-// for consecutive points sa,sb, with radii ra,rb, (with outward normal vector
-// v), calculates the angles (from sa,sb repsectively) at which to draw a
-// smooth line from the circle around sa to the circle around sb
-pair<double,double> smooth_line_angle(spoint sa, spoint sb, double ra, double rb){
-    //cout << "INFO: sa,sb,ra,rb are " << sa << sb << ra << rb << endl;
-    vec2d c = smooth_line_normal(sa, sb, ra, rb);
-    double theta = atan2(c.y,c.x);
-    //cout << "INFO: theta,cy,cx are " << theta << "," << c.y << "," << c.x << endl;
-    return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
-}
 
 // TODO: maybe iterate more efficiently, instead of going *all* the way back to
 // the beginning every time something is removed
@@ -295,9 +297,9 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         vec2d v2 = stv(*s);
         vec2d v3 = stv(*next);
 
-        double r1 = vertex_radius(lastpt,inc,exc);
-        double r2 = vertex_radius(*s,inc,exc);
-        double r3 = vertex_radius(*next,inc,exc);
+        double r1 = lastpt.radius;
+        double r2 = (*s).radius;
+        double r3 = (*next).radius;
 
         vec2d c1 = smooth_line_normal(lastpt, *s, r1, r2);
         vec2d c2 = smooth_line_normal(*s, *next, r2, r3);

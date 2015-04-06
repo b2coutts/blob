@@ -38,7 +38,6 @@ void draw(int width, int height,
         vector<spoint> &hull,
         vector<spoint> &inpoints,
         vector<spoint> &expoints,
-        vector<double> &radii,
         const color& fill_color,
         const char *filename)
 {
@@ -76,7 +75,7 @@ void draw(int width, int height,
 
   if(DRAW_BLOB) {
       cairo_set_source_color(cr, fill_color);
-      draw_with_smoothed_lines(cr, hull, radii);
+      draw_with_smoothed_lines(cr, hull);
       cairo_fill_preserve(cr);
       cairo_set_source_rgba (cr, fill_color.r, fill_color.g, fill_color.b,
               0.8);
@@ -100,7 +99,6 @@ void draw_many_blobs(
         const char *filename,
         const std::vector<spoint> &points,
         const std::list< std::vector<spoint> > &hulls,
-        const std::list< std::vector<double> > &radiii,
         const std::vector< color > &colors
         ) {
 
@@ -122,16 +120,14 @@ void draw_many_blobs(
         draw_axis(cr);
     }
     auto hull_it = hulls.cbegin();
-    auto radiii_it = radiii.cbegin();
     for(size_t i = 0;
 
         hull_it != hulls.cend() &&
-        radiii_it != radiii.cend() &&
         i < colors.size();
 
-        hull_it++, radiii_it++, i++)
+        hull_it++, i++)
     {
-        draw_blob(cr, *hull_it, *radiii_it, colors[i]);
+        draw_blob(cr, *hull_it, colors[i]);
     }
 
     draw_end(cr, surface, filename);
@@ -139,7 +135,6 @@ void draw_many_blobs(
 
 void draw_blob(cairo_t *cr,
         const std::vector<spoint> &hull,
-        const std::vector<double> &radii,
         const color &fill_color
         )
 {
@@ -151,7 +146,7 @@ void draw_blob(cairo_t *cr,
 
   if(DRAW_BLOB) {
       cairo_set_source_color(cr, fill_color);
-      draw_with_smoothed_lines(cr, hull, radii);
+      draw_with_smoothed_lines(cr, hull);
       cairo_fill_preserve(cr);
       cairo_set_source_rgba (cr, fill_color.r, fill_color.g, fill_color.b,
               0.8);
@@ -222,8 +217,7 @@ void draw_with_lines(cairo_t *cr, const vector<spoint> &points)
     cairo_stroke(cr);
 }
 
-void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
-                             const vector<double> &radii)
+void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
 {
     cairo_new_path(cr);
 
@@ -240,7 +234,7 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
     // TODO: assumes clockwise convex hull (for last arg)
     double previous_angle;
     pair<double,double> dpair = smooth_line_angle(points.back(),
-            *(points.begin()), radii[points.size()-1], radii[0]);
+            *(points.begin()));
             //rotccw(stv(*(points.begin())) - stv(points.back()) , PI/2));
     previous_angle = dpair.second;
 
@@ -250,12 +244,12 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points,
         spoint a = points[i % points.size()];
         spoint b = points[(i + 1) % points.size()];
 
-        double a_rad = radii[i % points.size()];
-        double b_rad = radii[(i+1) % points.size()];
+        double a_rad = points[i % points.size()].radius;
+        double b_rad = points[(i+1) % points.size()].radius;
 
         // cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
         //     << ", " << ") = ";
-        dpair = smooth_line_angle(a, b, a_rad, b_rad);
+        dpair = smooth_line_angle(a, b);
         // cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;
 
         if(a.inblob){
