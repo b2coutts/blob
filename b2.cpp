@@ -82,7 +82,6 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
             //cout << "  CHECKING TRIANGLE " << *before << *added << *after << endl;
 
             // check if the triangle we removed contained any inc points
-            // TODO: can optimize by storing points in kd-tree
             // TODO: does checking every inc point whenever we remove an exc
             //       point take too much time?
             for(int k = 0; k < inc.size(); k++){
@@ -132,7 +131,44 @@ vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
     if(sa.inblob)  c = rotccw(w, acos(delta));
     else            c = rotccw(w, 2*PI - acos(delta));
 
+    assert(c.x == c.x && c.y == c.y); // checks for nan
+
     return c;
+}
+
+// given two line segments a-b, c-d, returns true iff they cross
+bool crosses(vec2d a, vec2d b, vec2d c, vec2d d){
+    vec2d c1,c2; // normals to a-b, c-d
+    c1 = rotccw(b-a, PI/2);
+    c2 = rotccw(d-c, PI/2);
+    c1 = scale(1/norm(c1), c1);
+    c2 = scale(1/norm(c2), c2);
+
+    // perp of c1 onto c2
+    vec2d perp = c1 - scale(inner(c1,c2), c2);
+    double k2 = inner(c2, c);
+    double k1 = (inner(c1, a) - k2*inner(c1,c2)) / inner(c1,perp);
+
+    // intersection of the infinite lines a-b, c-d
+    vec2d inter = scale(k1, perp) + scale(k2, c2);
+
+    double ip1 = inner(b-a, inter);
+    double ip2 = inner(d-c, inter);
+
+    return inner(b-a, a) < ip1 && ip1 < inner(b-a, b) &&
+           inner(d-c, c) < ip2 && ip2 < inner(d-c, d);
+}
+
+// return true iff the line segment a-b intersects the border of the polygon.
+// Intersection only counts if the lines form a nondegenerate cross
+bool cross_poly(spoint a, spoint b, const list<spoint> poly){
+    auto prev = --(poly.end());
+    for(auto i = poly.begin(); i != poly.end(); ++i){
+        if(a == *i || a == *prev || b == *i || b == *prev) continue;
+        if(crosses(stv(a), stv(b), stv(*prev), stv(*i))) return true;
+        prev = i;
+    }
+    return false;
 }
 
 // calculate the radius of each vertex
@@ -143,14 +179,20 @@ void get_radii(list<spoint> &points, vector<spoint> &inpoints,
     for(int i = 0; i < inpoints.size(); i++){
         inpoints[i].radius = numeric_limits<double>::max();
         for(auto &x : inpoints){
-            if(x == inpoints[i]) continue;
+            if(x == inpoints[i] || (!cross_poly(x,inpoints[i], points) &&
+                                    x.inblob == inpoints[i].inblob)) continue;
             inpoints[i].radius = min(inpoints[i].radius, dist(stv(inpoints[i]), stv(x)));
         }
         for(auto &x : expoints){
-            if(x == inpoints[i]) continue;
+            if(x == inpoints[i] || (!cross_poly(x,inpoints[i], points) &&
+                                    x.inblob == inpoints[i].inblob)) continue;
             inpoints[i].radius = min(inpoints[i].radius, dist(stv(inpoints[i]), stv(x)));
         }
         inpoints[i].radius /= MINDIST_RADIUS_FACTOR;
+
+        cout << "ASSIGN RADIUS: " << inpoints[i] << endl;
+
+        assert(inpoints[i].radius == inpoints[i].radius); // check for nan
 
         // TODO: lazy expensive pass to populate the radii in the polytope
         for(auto &pt : points){
@@ -162,11 +204,13 @@ void get_radii(list<spoint> &points, vector<spoint> &inpoints,
     for(int i = 0; i < expoints.size(); i++){
         expoints[i].radius = numeric_limits<double>::max();
         for(auto &x : inpoints){
-            if(x == expoints[i]) continue;
+            if(x == expoints[i] || (!cross_poly(x,expoints[i], points) &&
+                                    x.inblob == expoints[i].inblob)) continue;
             expoints[i].radius = min(expoints[i].radius, dist(stv(expoints[i]), stv(x)));
         }
         for(auto &x : expoints){
-            if(x == expoints[i]) continue;
+            if(x == expoints[i] || (!cross_poly(x,expoints[i], points) &&
+                                    x.inblob == expoints[i].inblob)) continue;
             expoints[i].radius = min(expoints[i].radius, dist(stv(expoints[i]), stv(x)));
         }
         expoints[i].radius /= MINDIST_RADIUS_FACTOR;
@@ -233,6 +277,8 @@ bool closest_line(list<spoint> &poly, spoint p){
     return false;
 }
 
+int REMOVETHISVAR = 0; // TODO: remove this var!
+
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     auto pts = inc;
@@ -247,6 +293,8 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
 
             bool retval = closest_line(poly, pt);
             if(retval){
+                // TODO: remove this check!!!
+                if(REMOVETHISVAR++ < 9999)
                 refine_poly(poly, inc, exc);
                 return;
             }
