@@ -264,6 +264,7 @@ bool closest_line(list<spoint> &poly, spoint p){
         vec2d poly_nrml = rotccw(stv(*next) - stv(*vtx), PI/2);
 
         vec2d nrml = smooth_line_normal(*vtx, *next, (*vtx).radius, (*next).radius);
+        if(inner(nrml, poly_nrml) < 0) nrml = -nrml; // hack for orientation to work
         vec2d a = stv(*vtx) + scale((*vtx).radius, nrml);
         vec2d b = stv(*next) + scale((*next).radius,
                                 ((*vtx).inblob == (*next).inblob ? nrml : -nrml));
@@ -279,11 +280,12 @@ bool closest_line(list<spoint> &poly, spoint p){
     }
     
     // insert if sufficiently close
-    cout << "pt is " << p << ", mindist is " << mindist << ", rad is "
-         << p.radius << endl;
+    //cout << "pt is " << p << ", mindist is " << mindist << ", rad is "
+         //<< p.radius << endl;
     if(mindist < p.radius){
         auto db_it = min_it; --db_it;
-        cout << "INSERTING " << p << " between " << *db_it << " and " << *min_it << endl;
+        cout << "INSERTING " << p << " between " << *db_it << " and " << *min_it
+             << " (val=" << mindist << ")" << endl;
         poly.insert(min_it, p);
         return true;
     }
