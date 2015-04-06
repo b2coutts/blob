@@ -65,6 +65,18 @@ void draw(int width, int height,
   cairo_set_line_width(cr, POLY_THICKNESS / avg_scale);
   if(DRAW_POLYGON) draw_with_lines(cr, hull);
 
+  if(DRAW_RADII){
+    for(auto &pt : inpoints){
+      cairo_new_path(cr);
+      cairo_arc(cr, pt.x, pt.y, pt.radius, 0, TAU);
+      cairo_stroke(cr);
+    }
+    for(auto &pt : expoints){
+      cairo_new_path(cr);
+      cairo_arc(cr, pt.x, pt.y, pt.radius, 0, TAU);
+      cairo_stroke(cr);
+    }
+  }
 
   cairo_set_line_width(cr, 0.02);
   cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.9);
