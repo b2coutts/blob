@@ -25,17 +25,21 @@ void print_poly(list<spoint> poly){
 // given a point and a polygon, insert the point between the nearest two
 // vertices. Return an iterator to the inserted point. Searches only within
 // [start,end)
+// when use_endstart is true, consider also the line from (--end) to start
 list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
                                       const list<spoint>::iterator start,
-                                      const list<spoint>::iterator end){
+                                      const list<spoint>::iterator end,
+                                      bool use_endstart){
     list<spoint>::iterator min_idx = start;
     list<spoint>::iterator j;
     vec2d nrml;
     double min = numeric_limits<double>::max();
-    //cout << "  init min: " << *min_idx << " with OV=" << min << endl;
     for(j = start; j != end; ++j){
         list<spoint>::iterator next = j; ++next;
-        if(next == end) next = start;
+        if(next == end){
+            if(use_endstart) next = start;
+            else break;
+        }
 
         nrml = rotccw(stv(*next) - stv(*j), PI/2);
         nrml = scale(1/norm(nrml), nrml);
@@ -46,7 +50,6 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
            inner(linedir, stv(*next)-stv(p)) > 0){
             min = obj_val;
             min_idx = next;
-            //cout << "  WINNER: " << *min_idx << " w/ OV=" << obj_val << endl;
         }
     }
 
@@ -69,7 +72,7 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
         if(point_inside(exc[i], hull)){
             list<spoint>::iterator before, added, after;
             before = added = after = insert_nearest(exc[i], hull, hull.begin(),
-                                                    hull.end());
+                                                    hull.end(), true);
 
             if(before == hull.begin()) before = hull.end();
             --before;
@@ -86,7 +89,8 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
                 if(point_inside_triangle(inc[k], *before, *added, *after) &&
                    !point_inside(inc[k], hull)){
                     //cout << "  INSERTING " << inc[k] << endl;
-                    insert_nearest(inc[k], hull, added, ++after);
+                    insert_nearest(inc[k], hull, before, ++after, false);
+                    --after;
                 }
             }
         }
