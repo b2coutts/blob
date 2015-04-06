@@ -171,9 +171,15 @@ we insert it into the list between the two.
 Once we have a final boundary, and radii, we can draw the blob.
 
 For each edge $uv$, we consider a pair of circles centered at
-$u$ and $v$, with the radii $r_u$ and $r_v$.  We draw a line
-that is tangent to both circles and then fill in the rest of the arc,
-as we compute the tangent point for the next edge.
+$u$ and $v$, with the radii $r_u$ and $r_v$.
+
+Consider as if we were to take a piece of string and wrap it around
+the outside of these circles.
+It would have three segments,
+first when it was in contact with the first circle,
+then it would leave and travel along a line tangent to both circles,
+then it would arrive at the second circle
+and travel along it before leaving somewhere on the other side.
 
 
 
