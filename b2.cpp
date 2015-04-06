@@ -286,6 +286,13 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     auto pts = inc;
     for(int i = 0; i < 1; i++){
         for(auto &pt : pts){
+            // make sure point is not already in polygon
+            bool inpoly = false;
+            for(auto &pt2 : pts){
+                if(pt == pt2) inpoly = true;
+            }
+            if(inpoly) continue;
+
             bool retval = closest_line(poly, pt);
             if(retval){
                 refine_poly(poly, inc, exc);
