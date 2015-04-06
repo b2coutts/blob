@@ -394,9 +394,9 @@ bool Triangle::contains(const spoint& p) const
 
 ostream& operator<<(ostream& out, const spoint& p) {
     if(p.inblob) {
-        out << "(" << p.x << ", " << p.y << ")";
+        out << "(" << p.x << ", " << p.y << "; " << p.radius << ")";
     } else {
-        out << "<" << p.x << ", " << p.y << ">";
+        out << "<" << p.x << ", " << p.y << "; " << p.radius << ">";
     }
     return out;
 }
