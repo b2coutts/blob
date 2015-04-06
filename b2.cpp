@@ -23,7 +23,8 @@ void print_poly(list<spoint> poly){
 }
 
 // given a point and a polygon, insert the point between the nearest two
-// vertices. Return an iterator to the inserted point
+// vertices. Return an iterator to the inserted point. Searches only within
+// [start,end)
 list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
                                       const list<spoint>::iterator start,
                                       const list<spoint>::iterator end){
@@ -49,6 +50,8 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
         }
     }
 
+    assert(min != numeric_limits<double>::max());
+
     //auto db_idx = min_idx; if(min_idx == poly.begin()) db_idx = poly.end(); --db_idx;
     //cout << "fixed_hull inserts " << p << " between " << *db_idx << " and " <<
              //*min_idx << endl;
@@ -66,7 +69,7 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
         if(point_inside(exc[i], hull)){
             list<spoint>::iterator before, added, after;
             before = added = after = insert_nearest(exc[i], hull, hull.begin(),
-                                                    --(hull.end()));
+                                                    hull.end());
 
             if(before == hull.begin()) before = hull.end();
             --before;
@@ -83,7 +86,7 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
                 if(point_inside_triangle(inc[k], *before, *added, *after) &&
                    !point_inside(inc[k], hull)){
                     //cout << "  INSERTING " << inc[k] << endl;
-                    insert_nearest(inc[k], hull, added, after);
+                    insert_nearest(inc[k], hull, added, ++after);
                 }
             }
         }
