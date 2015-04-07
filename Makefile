@@ -2,7 +2,7 @@
 # Export this line in bash to compile
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/opt/X11/lib/pkgconfig
 CXXFLAGS+=-std=c++11
-CXXFLAGS+=-g
+CXXFLAGS+=-g -Wall
 CPPFLAGS+=$(shell pkg-config --cflags cairo)
 LDLIBS=$(shell pkg-config --libs cairo)
 
@@ -23,7 +23,9 @@ b2.o : types.h vec2d.h b2.h config.h
 #	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c 
 #	$(CC) $(LDFLAGS) draw.o  $(LOADLIBES) $(LDLIBS)
 
-.PHONY : clean
+.PHONY : clean, gallary
 
 clean :
 	- rm -f draw draw.o main.o input.o b2.o blob.o vec2d.o
+gallary : draw
+	./draw datasets/r100.dat datasets/merge.txt ~/www/bico/gal/photos/comb

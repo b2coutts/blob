@@ -1,0 +1,43 @@
+
+5 is nice and simple.
+
+
+I think 7 is nice,
+it's got an excluded point nicely excluded
+
+22 is a nice example of the dynamic radius shrinking, on the red
+tooth.
+So does 29, in fact, tis the same tooth.
+
+11 is nice, looks like a wrabbit.
+So does 62
+
+64 looks nice.
+
+78 looks cool, with the mostly interior handle.
+
+
+
+
+
+Broken ones
+
+23
+34
+40 has some of those invisible point sets
+48 has the same sets more than once
+-- Look
+10
+2  41 88 
+2  41 88 
+2  41 88 
+4  86 93 69 38 
+7  93 69 38 36 25 37 41 
+6  69 38 36 25 37 41 
+5  38 36 25 37 41 
+2  37 65 
+2  37 65 
+2  37 65 
+26
+----
+52

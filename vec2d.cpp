@@ -35,4 +35,5 @@ vec2d stv(spoint p){
 
 std::ostream& operator<<(std::ostream& out, const vec2d &v){
     out << "(" << v.x << "," << v.y << ")";
+    return out;
 }

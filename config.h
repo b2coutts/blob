@@ -28,6 +28,7 @@
 #define DRAW_POINTS true
 #define DRAW_POLYGON true
 #define DRAW_BLOB true
+#define DRAW_BACKGROUND true
 
 // controls buffer around edge of screen; larger => more space
 #define EDGE_BUFFER_WIDTH 1.5

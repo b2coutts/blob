@@ -41,13 +41,11 @@ void draw(int width, int height,
         std::vector<spoint> &hull,
         std::vector<spoint> &inpoints,
         std::vector<spoint> &expoints,
-        std::vector<double> &radii,
         const color &fill_color,
         const char *filename);
 
 void draw_blob(cairo_t *cr,
         const std::vector<spoint> &hull,
-        const std::vector<double> &radii,
         const color &fill_color
         );
 
@@ -56,7 +54,6 @@ void draw_many_blobs(
         const char *filename,
         const std::vector<spoint> &points,
         const std::list< std::vector<spoint> > &hulls,
-        const std::list< std::vector<double> > &radiii,
         const std::vector< color > &colors
         );
 
@@ -67,8 +64,7 @@ void scale_world(cairo_t * cr,
         const std::vector<spoint> &expoints);
 void draw_points(cairo_t *cr, const std::vector<spoint> &points, const double radius);
 void draw_with_lines(cairo_t *cr, const std::vector<spoint> &points);
-void draw_with_smoothed_lines(cairo_t *cr, const std::vector<spoint> &points,
-                             const std::vector<double> &radii);
+void draw_with_smoothed_lines(cairo_t *cr, const std::vector<spoint> &points);
 void draw_axis(cairo_t * cr);
 
 #endif
