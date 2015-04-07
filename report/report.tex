@@ -130,19 +130,19 @@ Our algorithm works as follows:
 \begin{enumerate}
 \item Take the convex hull of the included points.
 \item Fix the convex hull, so that no excluded points are in its interior.
-\item Compute the radii for each point.
+\item Compute the radius for each point.
 \item Induct nearby points to the polygon. 
 \item Remove ``crossover'' points.
-\item Draw blob around the vertices of the polygon.
+\item Connect the circles of the vertices of the polygon into a blob.
 \end{enumerate}
 
 
 \section{Generation of the Convex Hull}
-Our code uses the giftwrap algorithm to generate the convex hull.  It works by
-picking the leftmost point, and calculating the angle that is formed with each
-other point in the set, and picking the point that forms the angle closest to a
-straight line with the previous point. The result is shown in
-Figure~\ref{fig:chull}. \\
+Our code uses the giftwrap algorithm to generate the convex hull. We begin with
+the leftmost, then lowest, point, and find the first point we hit by casting a
+ray north and rotating clockwise. Remembering the direction we left off at, we
+do this again from the new point, and repeat the process until we arrive back at
+the starting point. The result is shown in Figure~\ref{fig:chull}. \\
 
 \begin{figure}
         \centering
@@ -169,7 +169,7 @@ We will do so by removing triangles from $P$; this will cause it to no longer be
 convex. \\
 
 To test if an excluded point is within $P$, we use the Jordan Curve Theorem. One
-of its consequences is that if we trace a ray from the point in any direction,
+of its consequences is that if we cast a ray from the point in any direction,
 it will cross an edge of $P$ an even number of times if and only if the point is
 outside $P$.  This is computationally simple to check. \\
 
@@ -214,8 +214,7 @@ For included points $a,b$, $a$ must bound the radius of $b$ if and only if the
 line segment from $a$ to $b$ is contained entirely within $P$. Similarly, for
 excluded points $a,b$, $a$ must bound the radius of $b$ if and only if the line
 segment from $a$ to $b$ is disjoint from $P$. We check this condition by
-checking if any edges of the polytope intersect with the line segment from $a$
-to $b$. \\
+checking if any edges of $P$ intersect with the line segment from $a$ to $b$. \\
 
 Given this notion of which points bound each others' radii, we choose the radius
 of a point to be $1/3$ of its distance to the nearest bounding point. This
@@ -248,7 +247,7 @@ to the polygon. \\
 We iterate over all points $p$ that are not vertices of $P$. Then, for each edge
 $e = (a,b)$ of $P$, we check if the line from the edge of the circle of $a$ to
 the edge of the circle of $b$ intersects the circle of $p$. If it does, we add
-$p$ to $P$, between $a$ and $b$ (effectively adding the trangle with vertices
+$p$ to $P$, between $a$ and $b$ (effectively adding the triangle with vertices
 $a,b,p$ to $P$). \\
 
 \begin{figure}
