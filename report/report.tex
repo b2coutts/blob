@@ -35,7 +35,7 @@
 
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.png}
-\graphicspath{{../imgs/}{./imgs/}}
+\graphicspath{{./imgs/}}
 
 \usepackage{sectsty} % Allows customizing section commands
 \allsectionsfont{\normalfont\scshape} % Make all sections centered, the default font and small caps
@@ -113,53 +113,50 @@ Some terminology, I use the term \textit{included} point to refer to points
 that are to be included inside the blob, and \textit{excluded} points to refer
 to points that must be on the exterior of the blob.
 
-Unless specified, polygon can mean non-convex polygon.
+Unless specified, polygon can mean non-convex polygon. \\
+
+Our algorithm works as follows:
+\begin{enumerate}
+\item Take the convex hull of the included points.
+\item Fix the convex hull, so that no excluded points are in its interior.
+\item Compute the radii for each point.
+\item Add nearby points to the polygon. 
+\item Remove ``crossover'' points.
+\item Draw blob around the vertices of the polygon.
+\end{enumerate}
 
 
 \section{Generation of the Convex Hull}
 Our code uses the giftwrap algorithm to generate the convex hull.
 This runs in $\O(i^2)$ time, where $i$ is the number of points included in the
-set.
+set. \\
 
 It works by picking the leftmost point, and calculating the angle that is
 formed with each other point in the set, and picking the point that forms
-the angle closest to a straight line with the previous point.
+the angle closest to a straight line with the previous point. \\
 
 % TODO nice diagram of in progress giftwrap?
 At the conclusion of this step, we have a list of included points in clockwise
 order, which forms our polygon.  Currently it's convex.
 
-\section{Chunkification}
-To test if a point is within any polygon, we can use the Jordon Curve Theorem.
-This states that if we trace a ray from the point in any direction, it
-will cross an edge of the polygon an even number of times if and only if
-the point is outside the polygon.
+\section{Point Exclusion}
+In this step, we will fix our polygon, so that no excluded point is in its
+interior. We will do so by removing triangles from our polytope; this will cause
+it to no longer be convex. \\
 
-This is computationally simple to check, and we use it as a subroutine.
+To test if an excluded point is within our polygon, we use the Jordan Curve
+Theorem. One of its consequences is that if we trace a ray from the point in any
+direction, it will cross an edge of the polygon an even number of times if and
+only if the point is outside the polygon.  This is computationally simple to
+check. \\
 
-For each excluded point $p$, we check if it's in the polygon, and if it is,
-we attempt to find the edge that it is closest to.
-We can calculate the normal to an edge $uv$ easily enough, since there are
-only two possible unit vectors orthogonal to the vector $\vec{uv}$.  Since
-we know our points are ordered by clockwise order, there is exactly one outwards
-pointing unit vector, call it $\vec{n}$.
-
-To check the distance between a point $p$ and the edge 
-$uv$, we can consider the value
-\[ \vec{pu} \cdot \vec{n} \]
-which is just the distance projected onto the normal.
-
-We also need to check that the point $p$ is closest to a point on the line
-segment, not just the infinite line, so we can compare
-\[ \vec{pu} \cdot \vec{vu} \]
-and
-\[ \vec{pv} \cdot \vec{uv} \]
-which should both be positive if $p$ is between the two points.
+For each excluded point $p$ in the interior of our polygon, we find the polygon
+edge closest to $p$. We consider only the edges whose endpoints $p$ is between.
+We then insert $p$ into our list of polygon vertices, between the endpoints of
+this edge. This removes the triangle formed by the edge and $p$ from our
+polygon.
 
 % TODO picture.
-
-Once we've found the unique closest line segment to an exterior point,
-we insert it into the list between the two.
 
 \section{Calculating Radii}
 The \textit{radius} of a point determines how large a circle is used when
