@@ -1,5 +1,11 @@
 CO759 final project, by Bryan Coutts and Theo Belaire
 
+*blob* is a program which draws nice looking blobs around sets of 2D points. It
+takes as input a cloud of 2D points, and a subset of them which are to be
+included, and draws a blob containing exactly those points. *blob* tries its
+best to generate a blob which maximizes the distance of points to its boundary,
+and is nice looking. The primary motivation for *blob* is for the visualization
+and analysis of Comb Inequalities for the Travelling Salesman Problem.
 
 Check out the [finished images][1].
 
@@ -30,8 +36,8 @@ It should be run like
 
     ./draw <input_points> <input_sets> <output_prefix>
 
-where *input_points* is a file consisting of
-*n* points, which are newline separated pairs of integers, like so
+where *input_points* is a file whose first line is a number *n*, followed by
+*n* points, represented as newline separated pairs of integers, like so 
 
     5
     72 24
@@ -40,7 +46,9 @@ where *input_points* is a file consisting of
     13 7
     74 17
 
-And *input_sets* is a file containing any number of combs that look like
+*input_sets* is a file containing any number of combs. The format of a comb is
+an integer *m*, followed by *m* lines, each of the form `k a_1 a_2 ... a_k`,
+where each a\_i is the index of an included point from *input_points*.
 
     4
     3  43 58 15
@@ -62,4 +70,5 @@ setttings that control the behavoir of our program.
 
 
 [1]: http://csclub.uwaterloo.ca/~tbelaire/bico/gal/
+[2]: 
 [cairo]: http://cairographics.org/
