@@ -93,14 +93,16 @@ int main(int argc, char *argv[]) {
             }
 
             list<spoint> fixed = fixed_hull(included, excluded);
-            curtime("after fixed_hull");
-            cout << "after fixed_hull: "; print_poly(fixed);
 
             get_radii(fixed, included, excluded);
-            curtime("after calculating radii");
+            rm_cont_pts(fixed);
+            curtime("after fixed_hull, radii");
+            cout << "after fixed_hull: "; print_poly(fixed);
 
             if(RUN_REFINE_POLY){
                 refine_poly(fixed, included, excluded);
+                rm_exc_pts(fixed, included, excluded); // clean up after ^
+                rm_cont_pts(fixed);
                 curtime("after refine_poly");
                 cout << "after refine "; print_poly(fixed);
             }
