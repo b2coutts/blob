@@ -37,6 +37,8 @@
 \DeclareGraphicsExtensions{.png}
 \graphicspath{{./imgs/}}
 
+\usepackage{subcaption}
+
 \usepackage{sectsty} % Allows customizing section commands
 \allsectionsfont{\normalfont\scshape} % Make all sections centered, the default font and small caps
 %\renewcommand{\thesection}{}
@@ -200,6 +202,22 @@ So that we can properly avoid them, we will add the excluded points to
 the boundary list.
 
 % TODO picture
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{before_caving}
+                \caption{Before}
+                \label{fig:before}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{after_caving}
+                \caption{After}
+                \label{fig:after}
+        \end{subfigure}
+        \caption{Before and After caving}\label{fig:caving}
+\end{figure}
 
 
 \section{Uncrossing}
