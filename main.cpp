@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 using namespace std;
@@ -126,14 +127,14 @@ int main(int argc, char *argv[]) {
             curtime("after radii");
 
             std::stringstream out_filename;
-            out_filename << combfile_base << "/" << comb_number
+            out_filename << combfile_base << "/" << setfill('0') << setw(3) << comb_number
                 << "/";
             cerr << "Drawing to " << out_filename.str() << endl;
             if(system((string("mkdir -p ") + out_filename.str()).c_str())) {
                 cerr << "Failed to mkdir" << endl;
                 exit(1);
             }
-            out_filename << set_number << ".png";
+            out_filename << setfill('0') << setw(3) << set_number << ".png";
             cerr << "Drawing to " << out_filename.str() << endl;
             draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded,
                     fill_colors[set_number],
@@ -148,8 +149,9 @@ int main(int argc, char *argv[]) {
             cerr << "Failed to mkdir" << endl;
             exit(1);
         }
-        out_filename << comb_number << "/" << "folder.png";
+        out_filename << setfill('0') << setw(3) << comb_number << "/" << "folder.png";
         cerr << endl << out_filename.str() << endl;
+
         draw_many_blobs(OUTPUT_IMG_WIDTH, OUTPUT_IMG_HEIGHT,
                 out_filename.str().c_str(),
                 points,
