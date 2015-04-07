@@ -161,9 +161,33 @@ which should both be positive if $p$ is between the two points.
 Once we've found the unique closest line segment to an exterior point,
 we insert it into the list between the two.
 
-\section{Absorbing points near lines}
-
 \section{Calculating Radii}
+The \textit{radius} of a point determines how large a circle is used when
+drawing the blob around it.  If all the radii were very small, it would not
+look very different from just the polygon.  However, we cannot increase the
+radii without bound, since we require that the circles for included and
+excluded lists cannot intersect.  It looks better if they don't even meet,
+so using exactly half the distance to the nearest point of the opposite type
+is not quite the best.
+Instead, we have a tunable parameter,
+which is around 2.5. %TODO
+
+% TODO picture
+Also, we don't want to create a scenario where we close the ``neck''
+on an exterior point that was inside the convex hull, trapping it inside.
+This could happen we increased the radii of two interior points
+
+\begin{figure}[p]
+\includegraphics[width=\textwidth]{torus_bitten}
+\caption{``An example of why we need the second rule''}
+\end{figure}
+
+Words
+
+
+\section{Absorbing points near lines}
+Once we have all the radii, we almost know the final shape of the blob.
+Ho
 
 \section{Uncrossing}
 
@@ -184,8 +208,8 @@ and travel along it before leaving somewhere on the other side.
 
 
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{7/folder}
-\caption{''It's number 7''}
-\end{figure}
+% \begin{figure}[h]
+% \includegraphics[width=\textwidth]{7/folder}
+% \caption{''It's number 7''}
+% \end{figure}
 \end{document}
