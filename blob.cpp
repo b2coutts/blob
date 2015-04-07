@@ -1,6 +1,7 @@
 
 #include "types.h"
 #include "blob.h"
+#include "vec2d.h"
 
 #include <assert.h>
 #include <cmath>
@@ -165,16 +166,20 @@ list<spoint> giftwrap(const vector<spoint> &included) {
     // http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
     list<spoint> inc(included.begin(), included.end());
     if(inc.size() == 2) { return inc; }
-    double leftmost = numeric_limits<double>::max();
-    int leftmost_index = -1;
+    vec2d leftmost{
+        numeric_limits<double>::max(),
+        numeric_limits<double>::max(),};
+
 
     list<spoint> hull;
     // Find a point surely on the convex hull
     list<spoint>::const_iterator leftmost_iter = inc.begin();
     for(auto it = inc.begin(); it != inc.end(); it++) {
-        if(it->x < leftmost) {
-            leftmost = it->x;
-            leftmost_iter = it;
+        if(it->x <= leftmost.x) {
+            if(it->x < leftmost.x || it->y < leftmost.y) {
+                leftmost={it->x, it->y};
+                leftmost_iter = it;
+            }
         }
     }
     hull.push_back(*leftmost_iter);
