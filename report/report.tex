@@ -172,7 +172,6 @@ is not quite the best.
 Instead, we have a tunable parameter,
 which is around 2.5. %TODO
 
-% TODO picture
 Also, we don't want to create a scenario where we close the ``neck''
 on an exterior point that was inside the convex hull, trapping it inside.
 
@@ -197,6 +196,14 @@ any of the lines that make up the polygon.
 
 \section{Absorbing points near lines}
 Once we have all the radii, we almost know the final shape of the blob.
+
+We need to check if there are any exterior points where the circle
+formed with their radii intersects with the blob.
+So that we can properly avoid them, we will add the excluded points to
+the boundary list.
+
+% TODO picture
+
 
 \section{Uncrossing}
 
