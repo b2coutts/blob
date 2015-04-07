@@ -1,6 +1,7 @@
 
 #include "types.h"
 #include "blob.h"
+#include "vec2d.h"
 
 #include <assert.h>
 #include <cmath>
@@ -165,16 +166,20 @@ list<spoint> giftwrap(const vector<spoint> &included) {
     // http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
     list<spoint> inc(included.begin(), included.end());
     if(inc.size() == 2) { return inc; }
-    double leftmost = numeric_limits<double>::max();
-    int leftmost_index = -1;
+    vec2d leftmost{
+        numeric_limits<double>::max(),
+        numeric_limits<double>::max(),};
+
 
     list<spoint> hull;
     // Find a point surely on the convex hull
     list<spoint>::const_iterator leftmost_iter = inc.begin();
     for(auto it = inc.begin(); it != inc.end(); it++) {
-        if(it->x < leftmost) {
-            leftmost = it->x;
-            leftmost_iter = it;
+        if(it->x <= leftmost.x) {
+            if(it->x < leftmost.x || it->y < leftmost.y) {
+                leftmost={it->x, it->y};
+                leftmost_iter = it;
+            }
         }
     }
     hull.push_back(*leftmost_iter);
@@ -191,8 +196,8 @@ list<spoint> giftwrap(const vector<spoint> &included) {
 
         auto endit = inc.begin(); // The free end of the line
         if(endit == inc.end()) { break; }
-        // while(*endit == base){ endit++; cerr << "WTF" << endl;}
-        auto next = endit; // Our final choice of endpoint
+        while(*endit == base){ endit++; }
+        auto next = endit; // Will hold our final choice of endpoint
 
 
         // Delta angles are wrt to lines
@@ -213,18 +218,18 @@ list<spoint> giftwrap(const vector<spoint> &included) {
             best_delta_angle = delta_angle;
             next_angle = angle;
             next_distance = distance;
+            // cerr << "  End: " << *endit << endl;
+            // cerr << "    delta_angle: " << delta_angle << endl;
         }
         endit++;
 
-        // cerr << "Base: (" << base.x
-        // << ", " << base.y << ")" << endl;
+        // cerr << "Base: " << base << endl;
 
 
         for(; endit != inc.end(); endit++) {
             if(*endit == base){ endit++; }
             if(endit == inc.end()) break;
             spoint &end = *endit;
-            //if(j == leftmost_index) { continue; }
             double dx = end.x - base.x;
             double dy = end.y - base.y;
             double distance = dx*dx + dy*dy;
@@ -237,10 +242,8 @@ list<spoint> giftwrap(const vector<spoint> &included) {
 
             //assert(delta_angle < TAU/2);
 
-            /*
-            cerr << "  End: " << end << endl;
-            cerr << "    delta_angle: " << delta_angle << endl;
-            */
+            // cerr << "  End: " << end << endl;
+            // cerr << "    delta_angle: " << delta_angle << endl;
             double delta_delta_angle = abs(best_delta_angle - delta_angle);
             if( delta_delta_angle < EPSILON ) {
                 // If on the same line, pick the closer one
@@ -394,9 +397,9 @@ bool Triangle::contains(const spoint& p) const
 
 ostream& operator<<(ostream& out, const spoint& p) {
     if(p.inblob) {
-        out << "(" << p.x << ", " << p.y << ")";
+        out << "(" << p.x << ", " << p.y << "; " << p.radius << ")";
     } else {
-        out << "<" << p.x << ", " << p.y << ">";
+        out << "<" << p.x << ", " << p.y << "; " << p.radius << ">";
     }
     return out;
 }

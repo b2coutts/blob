@@ -21,12 +21,12 @@ read_points(istream& in) {
     for(size_t i = 0; i < isize; i++) {
         double x, y;
         in >> x >> y;
-        included.emplace_back(x, y, true);
+        included.emplace_back(x, y, true, 0.0);
     }
     for(size_t i = 0; i < esize; i++) {
         double x, y;
         in >> x >> y;
-        excluded.emplace_back(x, y, false);
+        excluded.emplace_back(x, y, false, 0.0);
     }
 
     pair<vector<spoint>, vector<spoint> > ret (included, excluded);
@@ -51,7 +51,7 @@ read_cook_data(istream &data_file, istream &comb_file) {
     for(size_t i = 0; i < num_points; i++) {
         double x, y;
         data_file >> x >> y;
-        points.emplace_back(x,y, false); // This will be flipped for each comb
+        points.emplace_back(x,y, false, 0.0); // This will be flipped for each comb
     }
 
 

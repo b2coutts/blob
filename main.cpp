@@ -67,14 +67,12 @@ int main(int argc, char *argv[]) {
 
     string combfile_base(argv[3]);
     list< vector< spoint > > comb_hulls;
-    list< vector< double > > comb_radiii;
     int comb_number = -1;
     for(list< vector< size_t > > &comb : p.second) {
         comb_number++;
         curtime("before reseting spoints for new comb");
 
         comb_hulls.clear();
-        comb_radiii.clear();
 
         int set_number = -1;
         for(vector< size_t > comb_set : comb) {
@@ -107,8 +105,9 @@ int main(int argc, char *argv[]) {
 
             if(fixed.size() == 1) {
                 cerr << "Failed to create comb set "<< comb_number << ", " << set_number << endl;
-                continue;
             }
+            get_radii(fixed, included, excluded);
+            curtime("after calculating radii");
 
             if(RUN_REFINE_POLY){
                 refine_poly(fixed, included, excluded);
@@ -123,9 +122,7 @@ int main(int argc, char *argv[]) {
             }
 
             vector<spoint> pointvec(begin(fixed), end(fixed));
-            vector<double> radii = get_radii(pointvec, included, excluded);
             comb_hulls.push_back(pointvec);
-            comb_radiii.push_back(radii);
             curtime("after radii");
 
             std::stringstream out_filename;
@@ -138,7 +135,7 @@ int main(int argc, char *argv[]) {
             }
             out_filename << set_number << ".png";
             cerr << "Drawing to " << out_filename.str() << endl;
-            draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded, radii,
+            draw(OUTPUT_IMG_HEIGHT, OUTPUT_IMG_WIDTH, pointvec, included, excluded,
                     fill_colors[set_number],
                     out_filename.str().c_str());
             curtime("after draw");
@@ -157,7 +154,6 @@ int main(int argc, char *argv[]) {
                 out_filename.str().c_str(),
                 points,
                 comb_hulls,
-                comb_radiii,
                 fill_colors);
         cerr << endl;
     }
