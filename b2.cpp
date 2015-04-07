@@ -335,8 +335,6 @@ bool closest_line(list<spoint> &poly, spoint p){
     return false;
 }
 
-int REMOVETHISVAR = 0; // TODO: remove this var!
-
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     auto pts = inc;
@@ -351,8 +349,6 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
 
             bool retval = closest_line(poly, pt);
             if(retval){
-                // TODO: remove this check!!!
-                if(REMOVETHISVAR++ < 9999)
                 refine_poly(poly, inc, exc);
                 return;
             }
