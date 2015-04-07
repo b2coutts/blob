@@ -249,10 +249,10 @@ bool closest_line(list<spoint> &poly, spoint p){
         vec2d poly_nrml = rotccw(stv(*next) - stv(*vtx), PI/2);
 
         vec2d nrml = smooth_line_normal(*vtx, *next, (*vtx).radius, (*next).radius);
-        if(inner(nrml, poly_nrml) < 0) nrml = -nrml; // hack for orientation to work
         vec2d a = stv(*vtx) + scale((*vtx).radius, nrml);
         vec2d b = stv(*next) + scale((*next).radius,
                                 ((*vtx).inblob == (*next).inblob ? nrml : -nrml));
+        if(inner(nrml, poly_nrml) < 0) nrml = -nrml; // hack for orientation to work
         double dist = inner(nrml, v-a);
         if(dist < 0 && inner(poly_nrml, v-stv(*next)) < 0) continue;
         if(inner(b-a, v-a) < 0 || inner(b-a, v-b) > 0) continue;
@@ -277,7 +277,7 @@ bool closest_line(list<spoint> &poly, spoint p){
     return false;
 }
 
-int REMOVETHISVAR = 0; // TODO: remove this var!
+int REMOVETHISVAR = 9999; // TODO: remove this var!
 
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
@@ -294,7 +294,7 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
             bool retval = closest_line(poly, pt);
             if(retval){
                 // TODO: remove this check!!!
-                if(REMOVETHISVAR++ < 9999)
+                if(REMOVETHISVAR++ < 2)
                 refine_poly(poly, inc, exc);
                 return;
             }
