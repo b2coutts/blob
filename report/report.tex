@@ -130,7 +130,7 @@ Our algorithm works as follows:
 
 \section{Generation of the Convex Hull}
 Our code uses the giftwrap algorithm to generate the convex hull.
-This runs in $\O(i^2)$ time, where $i$ is the number of points included in the
+This runs in $\OO(i^2)$ time, where $i$ is the number of points included in the
 set. \\
 
 It works by picking the leftmost point, and calculating the angle that is
@@ -158,7 +158,6 @@ We then insert $p$ into our list of polygon vertices, between the endpoints of
 this edge. This removes the triangle formed by the edge and $p$ from our
 polygon.
 
-% TODO picture.
 
 \section{Calculating Radii}
 The \textit{radius} of a point determines how large a circle is used when
@@ -201,7 +200,6 @@ formed with their radii intersects with the blob.
 So that we can properly avoid them, we will add the excluded points to
 the boundary list.
 
-% TODO picture
 \begin{figure}
         \centering
         \begin{subfigure}[b]{0.5\textwidth}
