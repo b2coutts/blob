@@ -103,7 +103,7 @@ the#1\endcsname.\quad}}
     \horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
 }
 
-\author{Theo Belaire \\ 20415730 \\ Bryan Coutts \\ 20428420} % Your name
+\author{Theo Belaire \\ \texttt{20415730} \\ Bryan Coutts \\ \texttt{20428420}} % Your name
 
 \date{\normalsize\today} % Today's date or a custom date
 
@@ -115,7 +115,11 @@ This report outlines a solution to the problem of finding a smooth, connected
 ``blob'' which contains a specified set of points, and excludes all other
 points. Objectives are to maximize the distance from interior points to the
 boundary of the blob, maximize the distance from exterior points to the blob,
-and to make the blob as smooth and aesthetically pleasing as possible. \\
+and to make the blob as smooth and aesthetically pleasing as possible. The
+source code for our implementation can be found at\,
+\verb|https://www.github.com/b2coutts/blob|. A gallery of comb inequalities from
+a 100-point Euclidean TSP instance, courtesy of Bill Cook, can be found at\,
+\verb|http://csclub.uwaterloo.ca/~tbelaire/bico/gal|. \\
 
 We will use the term \textit{included point} to refer to points that are to be
 included inside the blob, and \textit{excluded point} to refer to points that
@@ -302,6 +306,18 @@ points to be disjoint from $P$.
         \end{subfigure}
         \caption{Drawing the final blob}\label{fig:blob}
 \end{figure}
+
+\section*{Conclusions and Further Study}
+The current implementation is generally capable of producing nice-looking blobs,
+and is suitable for use in visualizing sets and combs. However, there are some
+edge cases that it does not handle optimally. Moreover, the generated blobs
+could be made smoother and more aesthetically pleasing by choosing radii more
+flexibly, and by introducing ``dummy'' points to the polygon. Moreover, further
+effort could be put into optimizing the runtime of the code. The strategy for
+constructing the blob could be changed based on the density and layout of the
+input data. Multiple strategies could be employed, and an algorithm used at the
+end to take the best result, via metrics such as volume, girth, and
+point-to-boundary distances.
 
 % \begin{figure}[h]
 % \includegraphics[width=\textwidth]{7/folder}
