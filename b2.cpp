@@ -62,11 +62,20 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
     return poly.insert(min_idx, p);
 }
 
+// true iff the given point is a vertex in the polytope
+bool is_vtx(spoint p, const list<spoint> &poly){
+    for(auto &v : poly){
+        if(v == p) return true;
+    }
+    return false;
+}
+
 // removes excluded points from the interior of the polygon by removing triangles
 void rm_exc_pts(list<spoint> &hull, vector<spoint> &inc, vector<spoint> &exc){
     for(int i = 0; i < exc.size(); i++){
         if(point_inside(exc[i], hull)){
             list<spoint>::iterator before, added, after;
+            if(is_vtx(exc[i], hull)) continue;
             before = added = after = insert_nearest(exc[i], hull, hull.begin(),
                                                     hull.end(), true);
 
@@ -82,7 +91,7 @@ void rm_exc_pts(list<spoint> &hull, vector<spoint> &inc, vector<spoint> &exc){
             //       point take too much time?
             for(int k = 0; k < inc.size(); k++){
                 if(point_inside_triangle(inc[k], *before, *added, *after) &&
-                   !point_inside(inc[k], hull)){
+                   !is_vtx(inc[i], hull)){
                     //cout << "  INSERTING " << inc[k] << endl;
                     insert_nearest(inc[k], hull, before, ++after, false);
                     --after;
@@ -139,6 +148,8 @@ double normalize(double theta){
 }
 
 // like smooth_line_angle, but computes the normal vector c
+// if sa's circle is contained in sb's circle, returns nan as first coord.
+// if sb's circle is contained in sa's circle, returns nan as second coord.
 vec2d smooth_line_normal(spoint sa, spoint sb){
     //cout << "SLN(" << sa << ",  " << sb << ")" << endl;
     double ra = sa.radius;
@@ -151,6 +162,9 @@ vec2d smooth_line_normal(spoint sa, spoint sb){
     double delta = (ra - rb)/nrm;
     if(sa.inblob != sb.inblob) delta = (ra + rb)/nrm;
 
+    if(ra + nrm < rb) return {nan(""), 0};
+    if(rb + nrm < ra) return {0, nan("")};
+
     vec2d v = rotccw(b-a, PI/2);
     
     // calculate normal vector to line. Recalculate if the line is on the wrong
@@ -159,14 +173,6 @@ vec2d smooth_line_normal(spoint sa, spoint sb){
     if(sa.inblob)  c = rotccw(w, acos(delta));
     else            c = rotccw(w, 2*PI - acos(delta));
 
-/*
-    cout << "w is " << w << endl;
-    cout << "delta, c are " << delta << ",  " << c << endl;
-    cout << "delta is " << delta << endl;
-    cout << "acos(delta) is " << acos(delta) << endl;
-    cout << "rc1 is " <<rotccw(w, acos(delta)) << endl;
-    cout << "rc2 is " <<rotccw(w, 2*PI - acos(delta)) << endl;
-*/
     assert(c.x == c.x && c.y == c.y); // checks for nan
 
     return c;
@@ -269,6 +275,14 @@ pair<double,double> smooth_line_angle(spoint sa, spoint sb){
     return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
 }
 
+// true iff the circle of a contains the circle of b
+bool contains(spoint a, spoint b){
+    double d = dist(stv(a), stv(b));
+    return a.inblob == b.inblob &&
+           (a.radius < b.radius + d ||
+            b.radius < a.radius + d);
+}
+
 // given a point p which is not a vertex of poly, find the line of poly closest
 // to p; return the iterator of the second polytope vertex defining the line,
 // and insert it there if it is sufficiently close. Return true iff it was
@@ -285,6 +299,7 @@ bool closest_line(list<spoint> &poly, spoint p){
         vec2d poly_nrml = rotccw(stv(*next) - stv(*vtx), PI/2);
 
         vec2d nrml = smooth_line_normal(*vtx, *next);
+        //assert(nrml.x == nrml.x && nrml.y == nrml.y);
         vec2d a = stv(*vtx) + scale((*vtx).radius, nrml);
         vec2d b = stv(*next) + scale((*next).radius,
                                 ((*vtx).inblob == (*next).inblob ? nrml : -nrml));
@@ -300,15 +315,19 @@ bool closest_line(list<spoint> &poly, spoint p){
                  //<< ", dist=" << dist << endl;
         }
     }
+
+    if(mindist == numeric_limits<double>::max()) return false;
     
     // insert if sufficiently close
     //cout << "pt is " << p << ", mindist is " << mindist << ", rad is "
          //<< p.radius << endl;
-    if(mindist < p.radius){
-        auto db_it = min_it; --db_it;
-        cout << "INSERTING " << p << " between " << *db_it << " and " << *min_it
+    auto prev = min_it; --prev;
+    if(mindist < p.radius && !contains(*prev, p) && !contains(*min_it, p)){
+        cout << "INSERTING " << p << " between " << *prev << " and " << *min_it
              << " (val=" << mindist << ")" << endl;
         poly.insert(min_it, p);
+        if(contains(p, *prev)) poly.erase(prev);
+        if(contains(p, *min_it)) poly.erase(min_it);
         return true;
     }
     return false;
@@ -387,6 +406,7 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         double ip2 = inner(d-c, inter);
         if(inner(b-a, a) < ip1 && ip1 < inner(b-a, b) &&
            inner(d-c, c) < ip2 && ip2 < inner(d-c, d)){
+            //cout << "REMOVING " << *s << endl;
             poly.erase(s);
             removed_pt = true;
             //cout << "CUT!" << endl;

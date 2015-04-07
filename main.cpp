@@ -101,7 +101,9 @@ int main(int argc, char *argv[]) {
 
             if(RUN_REFINE_POLY){
                 refine_poly(fixed, included, excluded);
+            cout << "after rp1: "; print_poly(fixed);
                 rm_exc_pts(fixed, included, excluded); // clean up after ^
+            cout << "after rp2: "; print_poly(fixed);
                 rm_cont_pts(fixed);
                 curtime("after refine_poly");
                 cout << "after refine "; print_poly(fixed);
