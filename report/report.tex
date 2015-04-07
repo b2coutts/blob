@@ -19,6 +19,7 @@
 %----------------------------------------------------------------------------------------
 
 \documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 11pt font size
+\usepackage[margin=1in, top=0.5in, bottom=0.5in]{geometry}
 
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
 \usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
@@ -102,7 +103,7 @@ the#1\endcsname.\quad}}
     \horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
 }
 
-\author{Theo Belaire \\ 20415730 \\ Bryan Coutts \\ 20428420} % Your name
+\author{Theo Belaire \\ \texttt{20415730} \\ Bryan Coutts \\ \texttt{20428420}} % Your name
 
 \date{\normalsize\today} % Today's date or a custom date
 
@@ -110,44 +111,65 @@ the#1\endcsname.\quad}}
 
 \maketitle % Print the title
 
+This report outlines a solution to the problem of finding a smooth, connected
+``blob'' which contains a specified set of points, and excludes all other
+points. Objectives are to maximize the distance from interior points to the
+boundary of the blob, maximize the distance from exterior points to the blob,
+and to make the blob as smooth and aesthetically pleasing as possible. The
+source code for our implementation can be found at\,
+\verb|https://www.github.com/b2coutts/blob|. A gallery of comb inequalities from
+a 100-point Euclidean TSP instance, courtesy of Bill Cook, can be found at\,
+\verb|http://csclub.uwaterloo.ca/~tbelaire/bico/gal|. \\
 
-Some terminology, I use the term \textit{included} point to refer to points
-that are to be included inside the blob, and \textit{excluded} points to refer
-to points that must be on the exterior of the blob.
-
-Unless specified, polygon can mean non-convex polygon. \\
+We will use the term \textit{included point} to refer to points that are to be
+included inside the blob, and \textit{excluded point} to refer to points that
+must be on the exterior of the blob. The \textit{polygon} will be a (not
+necessarily convex) shape with we modify throughout the algorithm. \\
 
 Our algorithm works as follows:
 \begin{enumerate}
 \item Take the convex hull of the included points.
 \item Fix the convex hull, so that no excluded points are in its interior.
-\item Compute the radii for each point.
-\item Induct nearby points to the polygon. 
+\item Compute the radius for each point.
+\item Induct nearby points to the polygon.
 \item Remove ``crossover'' points.
-\item Draw blob around the vertices of the polygon.
+\item Connect the circles of the vertices of the polygon into a blob.
 \end{enumerate}
 
 
 \section{Generation of the Convex Hull}
-Our code uses the giftwrap algorithm to generate the convex hull.
-This runs in $\OO(i^2)$ time, where $i$ is the number of points included in the
-set. \\
+Our code uses the giftwrap algorithm to generate the convex hull. We begin with
+the leftmost, then lowest, point, and find the first point we hit by casting a
+ray north and rotating clockwise. Remembering the direction we left off at, we
+do this again from the new point, and repeat the process until we arrive back at
+the starting point. The result is shown in Figure~\ref{fig:chull}. \\
 
-It works by picking the leftmost point, and calculating the angle that is
-formed with each other point in the set, and picking the point that forms
-the angle closest to a straight line with the previous point. \\
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{chull_before}
+                \caption{Before}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{chull_after}
+                \caption{After}
+        \end{subfigure}
+        \caption{Computing the convex hull}\label{fig:chull}
+\end{figure}
 
 % TODO nice diagram of in progress giftwrap?
 At the conclusion of this step, we have a list of included points in clockwise
 order, which forms our polygon $P$. Currently it is convex.
 
 \section{Point Exclusion}
-In this step, we will fix $P$, so that no excluded point is in its interior. We
-will do so by removing triangles from $P$; this will cause it to no longer be
+In this step, we will adjust $P$, so that no excluded point is in its interior.
+We will do so by removing triangles from $P$; this will cause it to no longer be
 convex. \\
 
 To test if an excluded point is within $P$, we use the Jordan Curve Theorem. One
-of its consequences is that if we trace a ray from the point in any direction,
+of its consequences is that if we cast a ray from the point in any direction,
 it will cross an edge of $P$ an even number of times if and only if the point is
 outside $P$.  This is computationally simple to check. \\
 
@@ -165,6 +187,20 @@ and any that are all between 0 and 1 are inside the triangle. \\
 If there are any, we insert them into the nearest line of $P$, and continue
 onwards.
 
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{exc_before}
+                \caption{Before}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{exc_after}
+                \caption{After}
+        \end{subfigure}
+        \caption{Removing excluded points}\label{fig:exc}
+\end{figure}
 
 \section{Calculating Radii}
 The \textit{radius} of a point determines how large a circle is used when
@@ -174,12 +210,12 @@ otherwise the circles draw around included and excluded points will intersect
 with each other. Hence, the radius of an included point is bounded by its
 distance to an excluded point, and vice-versa. Moreover, there are situations in
 which the radius of an included point must be bounded by its proximity to
-another included point, as illustrated in Figure~\ref{fig:neck}.
+another included point, as illustrated in Figure~\ref{fig:neck}. \\
 
 \begin{figure}[h]
-\includegraphics[width=0.5\textwidth]{torus_bitten}
+\includegraphics[width=0.4\textwidth]{torus_bitten}
 \centering
-\caption{``If the radii of $a,b$ are too large, the blob will self-overlap''}
+\caption{If the radii of $a,b$ are too large, the blob will self-overlap}
 \label{fig:neck}
 \end{figure}
 
@@ -187,8 +223,7 @@ For included points $a,b$, $a$ must bound the radius of $b$ if and only if the
 line segment from $a$ to $b$ is contained entirely within $P$. Similarly, for
 excluded points $a,b$, $a$ must bound the radius of $b$ if and only if the line
 segment from $a$ to $b$ is disjoint from $P$. We check this condition by
-checking if any edges of the polytope intersect with the line segment from $a$
-to $b$. \\
+checking if any edges of $P$ intersect with the line segment from $a$ to $b$. \\
 
 Given this notion of which points bound each others' radii, we choose the radius
 of a point to be $1/3$ of its distance to the nearest bounding point. This
@@ -196,61 +231,101 @@ ratio must be at most $1/2$ to avoid overlap. The smaller the ratio is, the
 thinner and blockier our blob will be. $1/3$ allows for a curvy blob, while
 avoiding some pinching effects observed with higher ratios.
 
+\begin{figure}[h]
+\includegraphics[width=0.4\textwidth]{radii}
+\centering
+\caption{The radii of each point}
+\label{fig:neck}
+\end{figure}
+
 \section{Inducting nearby points}
 Once we have all the radii, we almost know the final shape of the blob. However,
 there may be excluded points near the edge of the polygon, whose circles (or
 even the points themselves) may intersect the blob, as seen in
-Figure~\ref{fig:whyrefine}.
-There may also be included points near the border, whose
-circles would intersect the exterior of the blob.  We add all such points to the
-polygon.
+Figure~\ref{fig:whyrefine}. There may also be included points near the border,
+whose circles would intersect the exterior of the blob.  We add all such points
+to the polygon. \\
 
 \begin{figure}[h]
-\includegraphics[width=0.3\textwidth]{whyrefine}
+\includegraphics[width=0.4\textwidth]{whyrefine}
 \centering
-\caption{``The circle of the bottom-right point is cut by the blob''}
+\caption{The circles of the bottom-right, top-left points are cut by the blob}
 \label{fig:whyrefine}
 \end{figure}
 
 We iterate over all points $p$ that are not vertices of $P$. Then, for each edge
 $e = (a,b)$ of $P$, we check if the line from the edge of the circle of $a$ to
 the edge of the circle of $b$ intersects the circle of $p$. If it does, we add
-$p$ to $P$, between $a$ and $b$ (effectively adding the trangle with vertices
+$p$ to $P$, between $a$ and $b$ (effectively adding the triangle with vertices
 $a,b,p$ to $P$). \\
 
 \begin{figure}
         \centering
-        \begin{subfigure}[b]{0.5\textwidth}
-                \includegraphics[width=\textwidth]{before_caving}
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{radii}
                 \caption{Before}
-                \label{fig:before}
-        \end{subfigure}~%
-\begin{subfigure}[b]{0.5\textwidth}
-                \includegraphics[width=\textwidth]{after_caving}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{fixed_hull}
                 \caption{After}
-                \label{fig:after}
         \end{subfigure}
-        \caption{Before and After caving}\label{fig:caving}
+        \caption{Removing excluded points}\label{fig:fixed_hull}
 \end{figure}
 
 \section{Uncrossing}
 
-\section{Arc computation}
-Once we have a final boundary, and radii, we can draw the blob.
+In adding these points, we may have created some undesirable loops, as seen in
+Figure~\ref{fig:loop}. We must do an extra pass over the vertices of $P$ to
+identify these cases and eliminate them. Such cases involve visiting a vertex
+that does not need to be visited; by simply finding and removing the vertices
+around which the blob crosses itself, we can eliminate this issue.
 
-For each edge $uv$, we consider a pair of circles centered at
-$u$ and $v$, with the radii $r_u$ and $r_v$.
+\begin{figure}[h]
+\includegraphics[width=0.4\textwidth]{loop}
+\centering
+\caption{A section in which the blob crosses itself}
+\label{fig:loop}
+\end{figure}
 
-Consider as if we were to take a piece of string and wrap it around
-the outside of these circles.
-It would have three segments,
-first when it was in contact with the first circle,
-then it would leave and travel along a line tangent to both circles,
-then it would arrive at the second circle
-and travel along it before leaving somewhere on the other side.
+\section{Blob Drawing}
+Finally, we draw the blob itself. We do this by connecting the circles of the
+vertices by tangent lines.
 
+For each edge $e=(a,b)$ of $P$, we apply some elementary linear algebra to find
+the line tangent to the circles of $(a,b)$. If $a,b$ are both included, the line
+is on the outer edges of their circles. If $a,b$ are both excluded, the line is
+on the inner edges of the circles. Otherwise, the line weaves between $a$ and
+$b$. This forces included points to be in the interior of $P$, and excluded
+points to be disjoint from $P$.
 
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{blob_rough}
+                \caption{Rough}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{blob_clean}
+                \caption{Clean}
+        \end{subfigure}
+        \caption{Drawing the final blob}\label{fig:blob}
+\end{figure}
 
+\section*{Conclusions and Further Study}
+The current implementation is generally capable of producing nice-looking blobs,
+and is suitable for use in visualizing sets and combs. However, there are some
+edge cases that it does not handle optimally. Moreover, the generated blobs
+could be made smoother and more aesthetically pleasing by choosing radii more
+flexibly, and by introducing ``dummy'' points to the polygon. Moreover, further
+effort could be put into optimizing the runtime of the code. The strategy for
+constructing the blob could be changed based on the density and layout of the
+input data. Multiple strategies could be employed, and an algorithm used at the
+end to take the best result, via metrics such as volume, girth, and
+point-to-boundary distances.
 
 % \begin{figure}[h]
 % \includegraphics[width=\textwidth]{7/folder}
