@@ -57,10 +57,7 @@ where each a\_i is the index of an included point from *input_points*.
     2  15 80
     10
 
-First, the number of sets, followed by some sets, then a final number, which
-we ignore.
-Each set first states its size, then contains that many indecies into the
-point list.
+...followed by a dummy value that is unused.
 
 
 ### Configuration
@@ -70,5 +67,4 @@ setttings that control the behavoir of our program.
 
 
 [1]: http://csclub.uwaterloo.ca/~tbelaire/bico/gal/
-[2]: 
 [cairo]: http://cairographics.org/
