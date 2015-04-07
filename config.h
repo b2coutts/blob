@@ -25,7 +25,7 @@
 
 // toggles whether or not to draw the axes, radii, points, polygon, blob
 #define DRAW_AXES false
-#define DRAW_RADII true
+#define DRAW_RADII false
 #define DRAW_POINTS true
 #define DRAW_POLYGON true
 #define DRAW_BLOB true
