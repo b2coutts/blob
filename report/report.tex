@@ -37,6 +37,8 @@
 \DeclareGraphicsExtensions{.png}
 \graphicspath{{./imgs/}}
 
+\usepackage{subcaption}
+
 \usepackage{sectsty} % Allows customizing section commands
 \allsectionsfont{\normalfont\scshape} % Make all sections centered, the default font and small caps
 %\renewcommand{\thesection}{}
@@ -128,7 +130,7 @@ Our algorithm works as follows:
 
 \section{Generation of the Convex Hull}
 Our code uses the giftwrap algorithm to generate the convex hull.
-This runs in $\O(i^2)$ time, where $i$ is the number of points included in the
+This runs in $\OO(i^2)$ time, where $i$ is the number of points included in the
 set. \\
 
 It works by picking the leftmost point, and calculating the angle that is
@@ -154,7 +156,6 @@ $p$. We consider only the edges whose endpoints $p$ is between.  We then insert
 $p$ into our list of polygon vertices, between the endpoints of this edge. This
 removes the triangle formed by the edge and $p$ from $P$.
 
-% TODO picture.
 
 \section{Calculating Radii}
 The \textit{radius} of a point determines how large a circle is used when
@@ -167,7 +168,7 @@ which the radius of an included point must be bounded by its proximity to
 another included point, as illustrated in ~\ref{fig:neck}.
 
 \begin{figure}[h]
-\includegraphics[width=0.3\textwidth]{torus_bitten}
+\includegraphics[width=0.5\textwidth]{torus_bitten}
 \centering
 \caption{``If the radii of $a,b$ are too large, the blob will self-overlap''}
 \label{fig:neck}
@@ -207,7 +208,22 @@ the edge of the circle of $b$ intersects the circle of $p$. If it does, we add
 $p$ to $P$, between $a$ and $b$ (effectively adding the trangle with vertices
 $a,b,p$ to $P$). \\
 
-% TODO picture
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{before_caving}
+                \caption{Before}
+                \label{fig:before}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{after_caving}
+                \caption{After}
+                \label{fig:after}
+        \end{subfigure}
+        \caption{Before and After caving}\label{fig:caving}
+\end{figure}
 
 \section{Uncrossing}
 
