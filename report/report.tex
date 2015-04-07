@@ -134,21 +134,34 @@ Our algorithm works as follows:
 
 
 \section{Generation of the Convex Hull}
-Our code uses the giftwrap algorithm to generate the convex hull.
-This runs in $\OO(i^2)$ time, where $i$ is the number of points included in the
-set. \\
+Our code uses the giftwrap algorithm to generate the convex hull.  It works by
+picking the leftmost point, and calculating the angle that is formed with each
+other point in the set, and picking the point that forms the angle closest to a
+straight line with the previous point. The result is shown in
+Figure~\ref{fig:chull}. \\
 
-It works by picking the leftmost point, and calculating the angle that is
-formed with each other point in the set, and picking the point that forms
-the angle closest to a straight line with the previous point. \\
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{chull_before}
+                \caption{Before}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{chull_after}
+                \caption{After}
+        \end{subfigure}
+        \caption{Computing the convex hull}\label{fig:chull}
+\end{figure}
 
 % TODO nice diagram of in progress giftwrap?
 At the conclusion of this step, we have a list of included points in clockwise
 order, which forms our polygon $P$. Currently it is convex.
 
 \section{Point Exclusion}
-In this step, we will fix $P$, so that no excluded point is in its interior. We
-will do so by removing triangles from $P$; this will cause it to no longer be
+In this step, we will adjust $P$, so that no excluded point is in its interior.
+We will do so by removing triangles from $P$; this will cause it to no longer be
 convex. \\
 
 To test if an excluded point is within $P$, we use the Jordan Curve Theorem. One
@@ -159,22 +172,21 @@ outside $P$.  This is computationally simple to check. \\
 For each excluded point $p$ in the interior of $P$, we find the edge closest to
 $p$. We consider only the edges whose endpoints $p$ is between.  We then insert
 $p$ into our list of polygon vertices, between the endpoints of this edge. This
-removes the triangle formed by the edge and $p$ from $P$. The result is shown in
-Figure~\ref{fig:chull}.
+removes the triangle formed by the edge and $p$ from $P$. \\
 
 \begin{figure}
         \centering
-        \begin{subfigure}[b]{0.5\textwidth}
-                \includegraphics[width=\textwidth]{chull_before}
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{exc_before}
                 \caption{Before}
         \end{subfigure}%
         ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
           %(or a blank line to force the subfigure onto a new line)
-        \begin{subfigure}[b]{0.5\textwidth}
-                \includegraphics[width=\textwidth]{chull_after}
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{exc_after}
                 \caption{After}
         \end{subfigure}
-        \caption{Computing the convex hull}\label{fig:chull}
+        \caption{Removing excluded points}\label{fig:exc}
 \end{figure}
 
 \section{Calculating Radii}
@@ -188,9 +200,9 @@ which the radius of an included point must be bounded by its proximity to
 another included point, as illustrated in Figure~\ref{fig:neck}. \\
 
 \begin{figure}[h]
-\includegraphics[width=0.5\textwidth]{torus_bitten}
+\includegraphics[width=0.4\textwidth]{torus_bitten}
 \centering
-\caption{``If the radii of $a,b$ are too large, the blob will self-overlap''}
+\caption{If the radii of $a,b$ are too large, the blob will self-overlap}
 \label{fig:neck}
 \end{figure}
 
@@ -207,6 +219,13 @@ ratio must be at most $1/2$ to avoid overlap. The smaller the ratio is, the
 thinner and blockier our blob will be. $1/3$ allows for a curvy blob, while
 avoiding some pinching effects observed with higher ratios.
 
+\begin{figure}[h]
+\includegraphics[width=0.4\textwidth]{radii}
+\centering
+\caption{The radii of each point}
+\label{fig:neck}
+\end{figure}
+
 \section{Inducting nearby points}
 Once we have all the radii, we almost know the final shape of the blob. However,
 there may be excluded points near the edge of the polygon, whose circles (or
@@ -216,9 +235,9 @@ whose circles would intersect the exterior of the blob.  We add all such points
 to the polygon. \\
 
 \begin{figure}[h]
-\includegraphics[width=0.5\textwidth]{whyrefine}
+\includegraphics[width=0.4\textwidth]{whyrefine}
 \centering
-\caption{``The circle of the bottom-right point is cut by the blob''}
+\caption{The circles of the bottom-right, top-left points are cut by the blob}
 \label{fig:whyrefine}
 \end{figure}
 
@@ -230,19 +249,17 @@ $a,b,p$ to $P$). \\
 
 \begin{figure}
         \centering
-        \begin{subfigure}[b]{0.5\textwidth}
-                \includegraphics[width=\textwidth]{before_caving}
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{radii}
                 \caption{Before}
-                \label{fig:before}
         \end{subfigure}%
         ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
           %(or a blank line to force the subfigure onto a new line)
-        \begin{subfigure}[b]{0.5\textwidth}
-                \includegraphics[width=\textwidth]{after_caving}
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{fixed_hull}
                 \caption{After}
-                \label{fig:after}
         \end{subfigure}
-        \caption{Before and After caving}\label{fig:caving}
+        \caption{Removing excluded points}\label{fig:fixed_hull}
 \end{figure}
 
 \section{Uncrossing}
@@ -254,9 +271,9 @@ that does not need to be visited; by simply finding and removing the vertices
 around which the blob crosses itself, we can eliminate this issue.
 
 \begin{figure}[h]
-\includegraphics[width=0.5\textwidth]{loop}
+\includegraphics[width=0.4\textwidth]{loop}
 \centering
-\caption{``A section in which the blob crosses itself''}
+\caption{A section in which the blob crosses itself}
 \label{fig:loop}
 \end{figure}
 
@@ -270,6 +287,21 @@ is on the outer edges of their circles. If $a,b$ are both excluded, the line is
 on the inner edges of the circles. Otherwise, the line weaves between $a$ and
 $b$. This forces included points to be in the interior of $P$, and excluded
 points to be disjoint from $P$.
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{blob_rough}
+                \caption{Rough}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.4\textwidth}
+                \includegraphics[width=\textwidth]{blob_clean}
+                \caption{Clean}
+        \end{subfigure}
+        \caption{Drawing the final blob}\label{fig:blob}
+\end{figure}
 
 % \begin{figure}[h]
 % \includegraphics[width=\textwidth]{7/folder}
