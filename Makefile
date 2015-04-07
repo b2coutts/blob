@@ -2,7 +2,7 @@
 # Export this line in bash to compile
 PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/opt/X11/lib/pkgconfig
 CXXFLAGS+=-std=c++11
-CXXFLAGS+=-g
+CXXFLAGS+=-g -Wall
 CPPFLAGS+=$(shell pkg-config --cflags cairo)
 LDLIBS=$(shell pkg-config --libs cairo)
 
