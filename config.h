@@ -38,8 +38,8 @@
 /* CONFIG PARAMS FOR B2.CPP */
 // factor by which one divides the minimum distance to get the radius.
 // Increasing this number will make the blob smaller/thinner.  Must be at least
-// 2.0
-#define MINDIST_RADIUS_FACTOR 2.5
+// 2.0. 3.0 seems optimal
+#define MINDIST_RADIUS_FACTOR 3.0
 
 // points for which min_dist_to_other_point*REFINE_EPSILON > dist_to_line will
 // be added to the polytope. REFINE_EPSILON should be at least 1.0; increasing
