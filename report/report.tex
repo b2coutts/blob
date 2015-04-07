@@ -154,7 +154,16 @@ outside $P$.  This is computationally simple to check. \\
 For each excluded point $p$ in the interior of $P$, we find the edge closest to
 $p$. We consider only the edges whose endpoints $p$ is between.  We then insert
 $p$ into our list of polygon vertices, between the endpoints of this edge. This
-removes the triangle formed by the edge and $p$ from $P$.
+removes the triangle formed by the edge and $p$ from $P$. \\
+
+At this point, we must be careful not to remove any included point
+from the polygon's interior.  That triangle we just removed could
+contain a included point, without it being on the boundary.
+We compute the barycentric co-ordinates of every included point
+and any that are all between 0 and 1 are inside the triangle. \\
+
+If there are any, we insert them into the nearest line of $P$, and continue
+onwards.
 
 
 \section{Calculating Radii}
@@ -165,7 +174,7 @@ otherwise the circles draw around included and excluded points will intersect
 with each other. Hence, the radius of an included point is bounded by its
 distance to an excluded point, and vice-versa. Moreover, there are situations in
 which the radius of an included point must be bounded by its proximity to
-another included point, as illustrated in ~\ref{fig:neck}.
+another included point, as illustrated in Figure~\ref{fig:neck}.
 
 \begin{figure}[h]
 \includegraphics[width=0.5\textwidth]{torus_bitten}
@@ -191,7 +200,8 @@ avoiding some pinching effects observed with higher ratios.
 Once we have all the radii, we almost know the final shape of the blob. However,
 there may be excluded points near the edge of the polygon, whose circles (or
 even the points themselves) may intersect the blob, as seen in
-~\ref{fig:whyrefine}. There may also be included points near the border, whose
+Figure~\ref{fig:whyrefine}.
+There may also be included points near the border, whose
 circles would intersect the exterior of the blob.  We add all such points to the
 polygon.
 
@@ -214,10 +224,8 @@ $a,b,p$ to $P$). \\
                 \includegraphics[width=\textwidth]{before_caving}
                 \caption{Before}
                 \label{fig:before}
-        \end{subfigure}%
-        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
-          %(or a blank line to force the subfigure onto a new line)
-        \begin{subfigure}[b]{0.5\textwidth}
+        \end{subfigure}~%
+\begin{subfigure}[b]{0.5\textwidth}
                 \includegraphics[width=\textwidth]{after_caving}
                 \caption{After}
                 \label{fig:after}
