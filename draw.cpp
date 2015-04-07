@@ -245,9 +245,8 @@ void draw_with_smoothed_lines(cairo_t *cr, const vector<spoint> &points)
         spoint b = points[(i + 1) % points.size()];
 
         double a_rad = points[i % points.size()].radius;
-        double b_rad = points[(i+1) % points.size()].radius;
 
-        // cout << "sla(" << a << ", " << b << ", " << a_rad << ", " << b_rad
+        // cout << "sla(" << a << ", " << b << ", " << a_rad <<
         //     << ", " << ") = ";
         dpair = smooth_line_angle(a, b);
         // cout << "(" << deg(dpair.first) << "," << deg(dpair.second) << ")" << endl;

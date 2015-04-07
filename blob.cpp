@@ -224,7 +224,6 @@ list<spoint> giftwrap(const vector<spoint> &included) {
             if(*endit == base){ endit++; }
             if(endit == inc.end()) break;
             spoint &end = *endit;
-            //if(j == leftmost_index) { continue; }
             double dx = end.x - base.x;
             double dy = end.y - base.y;
             double distance = dx*dx + dy*dy;

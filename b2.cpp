@@ -121,11 +121,13 @@ vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
     vec2d u = b - a;
     double nrm = norm(u);
     vec2d w = scale(1.0/nrm, u); // normalized u
-    double delta = (ra - rb)/nrm;
-    if(sa.inblob != sb.inblob) delta = (ra + rb)/nrm;
+    double delta;
+    if(sa.inblob == sb.inblob) {
+        delta = (ra - rb)/nrm;
+    } else {
+        delta = (ra + rb)/nrm;
+    }
 
-    vec2d v = rotccw(b-a, PI/2);
-    
     // calculate normal vector to line. Recalculate if the line is on the wrong
     // side of the circles
     vec2d c;
@@ -262,7 +264,6 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
     if(poly.size() == 2) {return;}
     bool removed_pt = false;
     spoint lastpt = poly.back();
-    int idx = 0;
     for(auto s = poly.begin(); s != poly.end(); ++s){
         //cout << endl << "rm_crossing on " << *s << endl;
         auto next = s; ++next;
