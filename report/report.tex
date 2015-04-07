@@ -19,6 +19,7 @@
 %----------------------------------------------------------------------------------------
 
 \documentclass[paper=a4, fontsize=11pt]{scrartcl} % A4 paper and 11pt font size
+\usepackage[margin=1in, top=0.5in, bottom=0.5in]{geometry}
 
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
 \usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
@@ -110,12 +111,16 @@ the#1\endcsname.\quad}}
 
 \maketitle % Print the title
 
+This report outlines a solution to the problem of finding a smooth, connected
+``blob'' which contains a specified set of points, and excludes all other
+points. Objectives are to maximize the distance from interior points to the
+boundary of the blob, maximize the distance from exterior points to the blob,
+and to make the blob as smooth and aesthetically pleasing as possible. \\
 
-Some terminology, I use the term \textit{included} point to refer to points
-that are to be included inside the blob, and \textit{excluded} points to refer
-to points that must be on the exterior of the blob.
-
-Unless specified, polygon can mean non-convex polygon. \\
+We will use the term \textit{included point} to refer to points that are to be
+included inside the blob, and \textit{excluded point} to refer to points that
+must be on the exterior of the blob. The \textit{polygon} will be a (not
+necessarily convex) shape with we modify throughout the algorithm. \\
 
 Our algorithm works as follows:
 \begin{enumerate}
@@ -154,8 +159,23 @@ outside $P$.  This is computationally simple to check. \\
 For each excluded point $p$ in the interior of $P$, we find the edge closest to
 $p$. We consider only the edges whose endpoints $p$ is between.  We then insert
 $p$ into our list of polygon vertices, between the endpoints of this edge. This
-removes the triangle formed by the edge and $p$ from $P$.
+removes the triangle formed by the edge and $p$ from $P$. The result is shown in
+Figure~\ref{fig:chull}.
 
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{chull_before}
+                \caption{Before}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{chull_after}
+                \caption{After}
+        \end{subfigure}
+        \caption{Computing the convex hull}\label{fig:chull}
+\end{figure}
 
 \section{Calculating Radii}
 The \textit{radius} of a point determines how large a circle is used when
@@ -165,7 +185,7 @@ otherwise the circles draw around included and excluded points will intersect
 with each other. Hence, the radius of an included point is bounded by its
 distance to an excluded point, and vice-versa. Moreover, there are situations in
 which the radius of an included point must be bounded by its proximity to
-another included point, as illustrated in ~\ref{fig:neck}.
+another included point, as illustrated in Figure~\ref{fig:neck}. \\
 
 \begin{figure}[h]
 \includegraphics[width=0.5\textwidth]{torus_bitten}
@@ -191,12 +211,12 @@ avoiding some pinching effects observed with higher ratios.
 Once we have all the radii, we almost know the final shape of the blob. However,
 there may be excluded points near the edge of the polygon, whose circles (or
 even the points themselves) may intersect the blob, as seen in
-~\ref{fig:whyrefine}. There may also be included points near the border, whose
-circles would intersect the exterior of the blob.  We add all such points to the
-polygon.
+Figure ~\ref{fig:whyrefine}. There may also be included points near the border,
+whose circles would intersect the exterior of the blob.  We add all such points
+to the polygon. \\
 
 \begin{figure}[h]
-\includegraphics[width=0.3\textwidth]{whyrefine}
+\includegraphics[width=0.5\textwidth]{whyrefine}
 \centering
 \caption{``The circle of the bottom-right point is cut by the blob''}
 \label{fig:whyrefine}
@@ -227,22 +247,29 @@ $a,b,p$ to $P$). \\
 
 \section{Uncrossing}
 
-\section{Arc computation}
-Once we have a final boundary, and radii, we can draw the blob.
+In adding these points, we may have created some undesirable loops, as seen in
+Figure ~\ref{fig:loop}. We must do an extra pass over the vertices of $P$ to
+identify these cases and eliminate them. Such cases involve visiting a vertex
+that does not need to be visited; by simply finding and removing the vertices
+around which the blob crosses itself, we can eliminate this issue.
 
-For each edge $uv$, we consider a pair of circles centered at
-$u$ and $v$, with the radii $r_u$ and $r_v$.
+\begin{figure}[h]
+\includegraphics[width=0.5\textwidth]{loop}
+\centering
+\caption{``A section in which the blob crosses itself''}
+\label{fig:loop}
+\end{figure}
 
-Consider as if we were to take a piece of string and wrap it around
-the outside of these circles.
-It would have three segments,
-first when it was in contact with the first circle,
-then it would leave and travel along a line tangent to both circles,
-then it would arrive at the second circle
-and travel along it before leaving somewhere on the other side.
+\section{Blob Drawing}
+Finally, we draw the blob itself. We do this by connecting the circles of the
+vertices by tangent lines.
 
-
-
+For each edge $e=(a,b)$ of $P$, we apply some elementary linear algebra to find
+the line tangent to the circles of $(a,b)$. If $a,b$ are both included, the line
+is on the outer edges of their circles. If $a,b$ are both excluded, the line is
+on the inner edges of the circles. Otherwise, the line weaves between $a$ and
+$b$. This forces included points to be in the interior of $P$, and excluded
+points to be disjoint from $P$.
 
 % \begin{figure}[h]
 % \includegraphics[width=\textwidth]{7/folder}
