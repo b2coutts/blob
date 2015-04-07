@@ -62,15 +62,20 @@ list<spoint>::iterator insert_nearest(const spoint &p, list<spoint> &poly,
     return poly.insert(min_idx, p);
 }
 
-// compute the "fixed" polygon
-list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
-    list<spoint> hull = giftwrap(inc);
-    cout << "after giftwrap: "; print_poly(hull);
-    if(!RUN_FIX_HULL) return hull;
+// true iff the given point is a vertex in the polytope
+bool is_vtx(spoint p, const list<spoint> &poly){
+    for(auto &v : poly){
+        if(v == p) return true;
+    }
+    return false;
+}
 
+// removes excluded points from the interior of the polygon by removing triangles
+void rm_exc_pts(list<spoint> &hull, vector<spoint> &inc, vector<spoint> &exc){
     for(int i = 0; i < exc.size(); i++){
         if(point_inside(exc[i], hull)){
             list<spoint>::iterator before, added, after;
+            if(is_vtx(exc[i], hull)) continue;
             before = added = after = insert_nearest(exc[i], hull, hull.begin(),
                                                     hull.end(), true);
 
@@ -82,12 +87,11 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
             //cout << "  CHECKING TRIANGLE " << *before << *added << *after << endl;
 
             // check if the triangle we removed contained any inc points
-            // TODO: can optimize by storing points in kd-tree
             // TODO: does checking every inc point whenever we remove an exc
             //       point take too much time?
             for(int k = 0; k < inc.size(); k++){
                 if(point_inside_triangle(inc[k], *before, *added, *after) &&
-                   !point_inside(inc[k], hull)){
+                   !is_vtx(inc[i], hull)){
                     //cout << "  INSERTING " << inc[k] << endl;
                     insert_nearest(inc[k], hull, before, ++after, false);
                     --after;
@@ -95,6 +99,35 @@ list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
             }
         }
     }
+}
+
+void rm_cont_pts(list<spoint> &hull){
+    auto prev = --(hull.end());
+    for(auto i = hull.begin(); i != hull.end(); i++){
+        if(i->inblob == prev->inblob){
+            if(i->radius + dist(stv(*i), stv(*prev)) < prev->radius){
+                cout << "ASDF" << endl;
+                hull.erase(i);
+                rm_cont_pts(hull);
+                return;
+            }else if(prev->radius + dist(stv(*i), stv(*prev)) < i->radius){
+                cout << "ASDF" << endl;
+                hull.erase(prev);
+                rm_cont_pts(hull);
+                return;
+            }
+        }
+        prev = i;
+    }
+}
+
+// compute the "fixed" polygon
+list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc){
+    list<spoint> hull = giftwrap(inc);
+    cout << "after giftwrap: "; print_poly(hull);
+    if(!RUN_FIX_HULL) return hull;
+
+    rm_exc_pts(hull, inc, exc);
 
     return hull;
 }
@@ -115,7 +148,12 @@ double normalize(double theta){
 }
 
 // like smooth_line_angle, but computes the normal vector c
-vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
+// if sa's circle is contained in sb's circle, returns nan as first coord.
+// if sb's circle is contained in sa's circle, returns nan as second coord.
+vec2d smooth_line_normal(spoint sa, spoint sb){
+    //cout << "SLN(" << sa << ",  " << sb << ")" << endl;
+    double ra = sa.radius;
+    double rb = sb.radius;
     vec2d a = stv(sa);
     vec2d b = stv(sb);
     vec2d u = b - a;
@@ -128,13 +166,53 @@ vec2d smooth_line_normal(spoint sa, spoint sb, double ra, double rb){
         delta = (ra + rb)/nrm;
     }
 
+    if(ra + nrm < rb) return {nan(""), 0};
+    if(rb + nrm < ra) return {0, nan("")};
+
     // calculate normal vector to line. Recalculate if the line is on the wrong
     // side of the circles
     vec2d c;
     if(sa.inblob)  c = rotccw(w, acos(delta));
     else            c = rotccw(w, 2*PI - acos(delta));
 
+    assert(c.x == c.x && c.y == c.y); // checks for nan
+
     return c;
+}
+
+// given two line segments a-b, c-d, returns true iff they cross
+bool crosses(vec2d a, vec2d b, vec2d c, vec2d d){
+    vec2d c1,c2; // normals to a-b, c-d
+    c1 = rotccw(b-a, PI/2);
+    c2 = rotccw(d-c, PI/2);
+    c1 = scale(1/norm(c1), c1);
+    c2 = scale(1/norm(c2), c2);
+
+    // perp of c1 onto c2
+    vec2d perp = c1 - scale(inner(c1,c2), c2);
+    double k2 = inner(c2, c);
+    double k1 = (inner(c1, a) - k2*inner(c1,c2)) / inner(c1,perp);
+
+    // intersection of the infinite lines a-b, c-d
+    vec2d inter = scale(k1, perp) + scale(k2, c2);
+
+    double ip1 = inner(b-a, inter);
+    double ip2 = inner(d-c, inter);
+
+    return inner(b-a, a) < ip1 && ip1 < inner(b-a, b) &&
+           inner(d-c, c) < ip2 && ip2 < inner(d-c, d);
+}
+
+// return true iff the line segment a-b intersects the border of the polygon.
+// Intersection only counts if the lines form a nondegenerate cross
+bool cross_poly(spoint a, spoint b, const list<spoint> poly){
+    auto prev = --(poly.end());
+    for(auto i = poly.begin(); i != poly.end(); ++i){
+        if(a == *i || a == *prev || b == *i || b == *prev) continue;
+        if(crosses(stv(a), stv(b), stv(*prev), stv(*i))) return true;
+        prev = i;
+    }
+    return false;
 }
 
 // calculate the radius of each vertex
@@ -145,14 +223,20 @@ void get_radii(list<spoint> &points, vector<spoint> &inpoints,
     for(int i = 0; i < inpoints.size(); i++){
         inpoints[i].radius = numeric_limits<double>::max();
         for(auto &x : inpoints){
-            if(x == inpoints[i]) continue;
+            if(x == inpoints[i] || (!cross_poly(x,inpoints[i], points) &&
+                                    x.inblob == inpoints[i].inblob)) continue;
             inpoints[i].radius = min(inpoints[i].radius, dist(stv(inpoints[i]), stv(x)));
         }
         for(auto &x : expoints){
-            if(x == inpoints[i]) continue;
+            if(x == inpoints[i] || (!cross_poly(x,inpoints[i], points) &&
+                                    x.inblob == inpoints[i].inblob)) continue;
             inpoints[i].radius = min(inpoints[i].radius, dist(stv(inpoints[i]), stv(x)));
         }
         inpoints[i].radius /= MINDIST_RADIUS_FACTOR;
+
+        cout << "ASSIGN RADIUS: " << inpoints[i] << endl;
+
+        assert(inpoints[i].radius == inpoints[i].radius); // check for nan
 
         // TODO: lazy expensive pass to populate the radii in the polytope
         for(auto &pt : points){
@@ -164,11 +248,13 @@ void get_radii(list<spoint> &points, vector<spoint> &inpoints,
     for(int i = 0; i < expoints.size(); i++){
         expoints[i].radius = numeric_limits<double>::max();
         for(auto &x : inpoints){
-            if(x == expoints[i]) continue;
+            if(x == expoints[i] || (!cross_poly(x,expoints[i], points) &&
+                                    x.inblob == expoints[i].inblob)) continue;
             expoints[i].radius = min(expoints[i].radius, dist(stv(expoints[i]), stv(x)));
         }
         for(auto &x : expoints){
-            if(x == expoints[i]) continue;
+            if(x == expoints[i] || (!cross_poly(x,expoints[i], points) &&
+                                    x.inblob == expoints[i].inblob)) continue;
             expoints[i].radius = min(expoints[i].radius, dist(stv(expoints[i]), stv(x)));
         }
         expoints[i].radius /= MINDIST_RADIUS_FACTOR;
@@ -185,10 +271,18 @@ void get_radii(list<spoint> &points, vector<spoint> &inpoints,
 // smooth line from the circle around sa to the circle around sb
 pair<double,double> smooth_line_angle(spoint sa, spoint sb){
     //cout << "INFO: sa,sb,ra,rb are " << sa << sb << ra << rb << endl;
-    vec2d c = smooth_line_normal(sa, sb, sa.radius, sb.radius);
+    vec2d c = smooth_line_normal(sa, sb);
     double theta = atan2(c.y,c.x);
     //cout << "INFO: theta,cy,cx are " << theta << "," << c.y << "," << c.x << endl;
     return {theta, sa.inblob == sb.inblob ? theta : normalize(theta + PI)};
+}
+
+// true iff the circle of a contains the circle of b
+bool contains(spoint a, spoint b){
+    double d = dist(stv(a), stv(b));
+    return a.inblob == b.inblob &&
+           (a.radius < b.radius + d ||
+            b.radius < a.radius + d);
 }
 
 // given a point p which is not a vertex of poly, find the line of poly closest
@@ -206,13 +300,15 @@ bool closest_line(list<spoint> &poly, spoint p){
 
         vec2d poly_nrml = rotccw(stv(*next) - stv(*vtx), PI/2);
 
-        vec2d nrml = smooth_line_normal(*vtx, *next, (*vtx).radius, (*next).radius);
-        if(inner(nrml, poly_nrml) < 0) nrml = -nrml; // hack for orientation to work
+        vec2d nrml = smooth_line_normal(*vtx, *next);
+        //assert(nrml.x == nrml.x && nrml.y == nrml.y);
         vec2d a = stv(*vtx) + scale((*vtx).radius, nrml);
         vec2d b = stv(*next) + scale((*next).radius,
                                 ((*vtx).inblob == (*next).inblob ? nrml : -nrml));
+        if(inner(nrml, poly_nrml) < 0) nrml = -nrml; // hack for orientation to work
         double dist = inner(nrml, v-a);
-        if(dist < 0 && inner(poly_nrml, v-stv(*next)) < 0) continue;
+        if(-dist > p.radius && p.inblob) continue;
+        if(dist < 0 && inner(poly_nrml, v-stv(*next)) < 0 && !p.inblob) continue;
         if(inner(b-a, v-a) < 0 || inner(b-a, v-b) > 0) continue;
         if(dist < mindist){
             mindist = dist;
@@ -221,19 +317,25 @@ bool closest_line(list<spoint> &poly, spoint p){
                  //<< ", dist=" << dist << endl;
         }
     }
+
+    if(mindist == numeric_limits<double>::max()) return false;
     
     // insert if sufficiently close
     //cout << "pt is " << p << ", mindist is " << mindist << ", rad is "
          //<< p.radius << endl;
-    if(mindist < p.radius){
-        auto db_it = min_it; --db_it;
-        cout << "INSERTING " << p << " between " << *db_it << " and " << *min_it
+    auto prev = min_it; --prev;
+    if(mindist < p.radius && !contains(*prev, p) && !contains(*min_it, p)){
+        cout << "INSERTING " << p << " between " << *prev << " and " << *min_it
              << " (val=" << mindist << ")" << endl;
         poly.insert(min_it, p);
+        if(contains(p, *prev)) poly.erase(prev);
+        if(contains(p, *min_it)) poly.erase(min_it);
         return true;
     }
     return false;
 }
+
+int REMOVETHISVAR = 0; // TODO: remove this var!
 
 // given a fixed polygon, refine each of its lines
 void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
@@ -249,6 +351,8 @@ void refine_poly(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
 
             bool retval = closest_line(poly, pt);
             if(retval){
+                // TODO: remove this check!!!
+                if(REMOVETHISVAR++ < 9999)
                 refine_poly(poly, inc, exc);
                 return;
             }
@@ -277,8 +381,8 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         double r2 = (*s).radius;
         double r3 = (*next).radius;
 
-        vec2d c1 = smooth_line_normal(lastpt, *s, r1, r2);
-        vec2d c2 = smooth_line_normal(*s, *next, r2, r3);
+        vec2d c1 = smooth_line_normal(lastpt, *s);
+        vec2d c2 = smooth_line_normal(*s, *next);
         
         vec2d a = v1 + scale(r1, c1);
         vec2d b = v2 + scale( (lastpt.inblob == (*s).inblob ? r2 : -r2), c1);
@@ -303,6 +407,7 @@ void rm_crossing(list<spoint> &poly, vector<spoint> &inc, vector<spoint> &exc){
         double ip2 = inner(d-c, inter);
         if(inner(b-a, a) < ip1 && ip1 < inner(b-a, b) &&
            inner(d-c, c) < ip2 && ip2 < inner(d-c, d)){
+            //cout << "REMOVING " << *s << endl;
             poly.erase(s);
             removed_pt = true;
             //cout << "CUT!" << endl;

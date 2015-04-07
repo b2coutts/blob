@@ -12,6 +12,13 @@ using namespace std;
 // helper function for writing a polygon to stdout
 void print_poly(list<spoint> poly);
 
+// removes excluded points from the interior of the polygon by removing triangles
+void rm_exc_pts(list<spoint> &hull, vector<spoint> &inc, vector<spoint> &exc);
+
+// removes adjacent vertices whose circles are properly contained in that of an
+// adjacent vertex
+void rm_cont_pts(list<spoint> &hull);
+
 // compute the "fixed" polygon
 list<spoint> fixed_hull(vector<spoint> &inc, vector<spoint> &exc);
 

@@ -23,8 +23,9 @@
 // scales the thickness of the drawn axes
 #define AXIS_THICKNESS 0.6
 
-// toggles whether or not to draw the axes, points, polygon, blob
+// toggles whether or not to draw the axes, radii, points, polygon, blob
 #define DRAW_AXES false
+#define DRAW_RADII true
 #define DRAW_POINTS true
 #define DRAW_POLYGON true
 #define DRAW_BLOB true
@@ -38,7 +39,7 @@
 // factor by which one divides the minimum distance to get the radius.
 // Increasing this number will make the blob smaller/thinner.  Must be at least
 // 2.0
-#define MINDIST_RADIUS_FACTOR 3.0
+#define MINDIST_RADIUS_FACTOR 2.5
 
 // points for which min_dist_to_other_point*REFINE_EPSILON > dist_to_line will
 // be added to the polytope. REFINE_EPSILON should be at least 1.0; increasing

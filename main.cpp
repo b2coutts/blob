@@ -101,17 +101,21 @@ int main(int argc, char *argv[]) {
             cerr << endl;
 
             list<spoint> fixed = fixed_hull(included, excluded);
-            curtime("after fixed_hull");
-            cout << "after fixed_hull: "; print_poly(fixed);
 
             if(fixed.size() == 1) {
                 cerr << "Failed to create comb set "<< comb_number << ", " << set_number << endl;
             }
             get_radii(fixed, included, excluded);
-            curtime("after calculating radii");
+            rm_cont_pts(fixed);
+            curtime("after fixed_hull, radii");
+            cout << "after fixed_hull: "; print_poly(fixed);
 
             if(RUN_REFINE_POLY){
                 refine_poly(fixed, included, excluded);
+            cout << "after rp1: "; print_poly(fixed);
+                rm_exc_pts(fixed, included, excluded); // clean up after ^
+            cout << "after rp2: "; print_poly(fixed);
+                rm_cont_pts(fixed);
                 curtime("after refine_poly");
                 cout << "after refine "; print_poly(fixed);
             }
