@@ -35,7 +35,7 @@
 
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.png}
-\graphicspath{{../imgs/}{./imgs}}
+\graphicspath{{../imgs/}{./imgs/}}
 
 \usepackage{sectsty} % Allows customizing section commands
 \allsectionsfont{\normalfont\scshape} % Make all sections centered, the default font and small caps
@@ -175,19 +175,28 @@ which is around 2.5. %TODO
 % TODO picture
 Also, we don't want to create a scenario where we close the ``neck''
 on an exterior point that was inside the convex hull, trapping it inside.
-This could happen we increased the radii of two interior points
 
 \begin{figure}[h]
 \includegraphics[width=0.3\textwidth]{torus_bitten}
 \centering
 \caption{``An example of why we need the second rule''}
+\label{fig:neck}
 \end{figure}
+
+See~\ref{fig:neck} for an example.
+
+The only time we need to restrict radii of interior points based on other
+interior points are when the straight line between the two is not
+contained within the polygon.  Same goes for exterior points that have a line
+that is not fully outside of the polygon.
+
+The way we check this is to see if the line between the two points intersects
+any of the lines that make up the polygon.
 
 
 
 \section{Absorbing points near lines}
 Once we have all the radii, we almost know the final shape of the blob.
-Ho
 
 \section{Uncrossing}
 
