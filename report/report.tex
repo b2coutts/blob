@@ -120,7 +120,7 @@ Our algorithm works as follows:
 \item Take the convex hull of the included points.
 \item Fix the convex hull, so that no excluded points are in its interior.
 \item Compute the radii for each point.
-\item Add nearby points to the polygon. 
+\item Induct nearby points to the polygon. 
 \item Remove ``crossover'' points.
 \item Draw blob around the vertices of the polygon.
 \end{enumerate}
@@ -137,70 +137,77 @@ the angle closest to a straight line with the previous point. \\
 
 % TODO nice diagram of in progress giftwrap?
 At the conclusion of this step, we have a list of included points in clockwise
-order, which forms our polygon.  Currently it's convex.
+order, which forms our polygon $P$. Currently it is convex.
 
 \section{Point Exclusion}
-In this step, we will fix our polygon, so that no excluded point is in its
-interior. We will do so by removing triangles from our polytope; this will cause
-it to no longer be convex. \\
+In this step, we will fix $P$, so that no excluded point is in its interior. We
+will do so by removing triangles from $P$; this will cause it to no longer be
+convex. \\
 
-To test if an excluded point is within our polygon, we use the Jordan Curve
-Theorem. One of its consequences is that if we trace a ray from the point in any
-direction, it will cross an edge of the polygon an even number of times if and
-only if the point is outside the polygon.  This is computationally simple to
-check. \\
+To test if an excluded point is within $P$, we use the Jordan Curve Theorem. One
+of its consequences is that if we trace a ray from the point in any direction,
+it will cross an edge of $P$ an even number of times if and only if the point is
+outside $P$.  This is computationally simple to check. \\
 
-For each excluded point $p$ in the interior of our polygon, we find the polygon
-edge closest to $p$. We consider only the edges whose endpoints $p$ is between.
-We then insert $p$ into our list of polygon vertices, between the endpoints of
-this edge. This removes the triangle formed by the edge and $p$ from our
-polygon.
+For each excluded point $p$ in the interior of $P$, we find the edge closest to
+$p$. We consider only the edges whose endpoints $p$ is between.  We then insert
+$p$ into our list of polygon vertices, between the endpoints of this edge. This
+removes the triangle formed by the edge and $p$ from $P$.
 
 % TODO picture.
 
 \section{Calculating Radii}
 The \textit{radius} of a point determines how large a circle is used when
-drawing the blob around it.  If all the radii were very small, it would not
-look very different from just the polygon.  However, we cannot increase the
-radii without bound, since we require that the circles for included and
-excluded lists cannot intersect.  It looks better if they don't even meet,
-so using exactly half the distance to the nearest point of the opposite type
-is not quite the best.
-Instead, we have a tunable parameter,
-which is around 2.5. %TODO
-
-Also, we don't want to create a scenario where we close the ``neck''
-on an exterior point that was inside the convex hull, trapping it inside.
+drawing the blob around it. If all the radii were very small, the blob would
+appear the same as the polygon.  However, the radii cannot be too large,
+otherwise the circles draw around included and excluded points will intersect
+with each other. Hence, the radius of an included point is bounded by its
+distance to an excluded point, and vice-versa. Moreover, there are situations in
+which the radius of an included point must be bounded by its proximity to
+another included point, as illustrated in ~\ref{fig:neck}.
 
 \begin{figure}[h]
 \includegraphics[width=0.3\textwidth]{torus_bitten}
 \centering
-\caption{``An example of why we need the second rule''}
+\caption{``If the radii of $a,b$ are too large, the blob will self-overlap''}
 \label{fig:neck}
 \end{figure}
 
-See~\ref{fig:neck} for an example.
+For included points $a,b$, $a$ must bound the radius of $b$ if and only if the
+line segment from $a$ to $b$ is contained entirely within $P$. Similarly, for
+excluded points $a,b$, $a$ must bound the radius of $b$ if and only if the line
+segment from $a$ to $b$ is disjoint from $P$. We check this condition by
+checking if any edges of the polytope intersect with the line segment from $a$
+to $b$. \\
 
-The only time we need to restrict radii of interior points based on other
-interior points are when the straight line between the two is not
-contained within the polygon.  Same goes for exterior points that have a line
-that is not fully outside of the polygon.
+Given this notion of which points bound each others' radii, we choose the radius
+of a point to be $1/3$ of its distance to the nearest bounding point. This
+ratio must be at most $1/2$ to avoid overlap. The smaller the ratio is, the
+thinner and blockier our blob will be. $1/3$ allows for a curvy blob, while
+avoiding some pinching effects observed with higher ratios.
 
-The way we check this is to see if the line between the two points intersects
-any of the lines that make up the polygon.
+\section{Inducting nearby points}
+Once we have all the radii, we almost know the final shape of the blob. However,
+there may be excluded points near the edge of the polygon, whose circles (or
+even the points themselves) may intersect the blob, as seen in
+~\ref{fig:whyrefine}. There may also be included points near the border, whose
+circles would intersect the exterior of the blob.  We add all such points to the
+polygon.
 
+\begin{figure}[h]
+\includegraphics[width=0.3\textwidth]{whyrefine}
+\centering
+\caption{``The circle of the bottom-right point is cut by the blob''}
+\label{fig:whyrefine}
+\end{figure}
 
-
-\section{Absorbing points near lines}
-Once we have all the radii, we almost know the final shape of the blob.
-
-We need to check if there are any exterior points where the circle
-formed with their radii intersects with the blob.
-So that we can properly avoid them, we will add the excluded points to
-the boundary list.
+We iterate over all points $p$ that are not vertices of $P$. Then, for each edge
+$e = (a,b)$ of $P$, we check if the line from the edge of the circle of $a$ to
+the edge of the circle of $b$ intersects the circle of $p$. If it does, we add
+$p$ to $P$, between $a$ and $b$ (effectively adding the trangle with vertices
+$a,b,p$ to $P$). \\
 
 % TODO picture
-
 
 \section{Uncrossing}
 
