@@ -196,8 +196,8 @@ list<spoint> giftwrap(const vector<spoint> &included) {
 
         auto endit = inc.begin(); // The free end of the line
         if(endit == inc.end()) { break; }
-        // while(*endit == base){ endit++; cerr << "WTF" << endl;}
-        auto next = endit; // Our final choice of endpoint
+        while(*endit == base){ endit++; }
+        auto next = endit; // Will hold our final choice of endpoint
 
 
         // Delta angles are wrt to lines
@@ -218,11 +218,12 @@ list<spoint> giftwrap(const vector<spoint> &included) {
             best_delta_angle = delta_angle;
             next_angle = angle;
             next_distance = distance;
+            // cerr << "  End: " << *endit << endl;
+            // cerr << "    delta_angle: " << delta_angle << endl;
         }
         endit++;
 
-        // cerr << "Base: (" << base.x
-        // << ", " << base.y << ")" << endl;
+        // cerr << "Base: " << base << endl;
 
 
         for(; endit != inc.end(); endit++) {
@@ -241,10 +242,8 @@ list<spoint> giftwrap(const vector<spoint> &included) {
 
             //assert(delta_angle < TAU/2);
 
-            /*
-            cerr << "  End: " << end << endl;
-            cerr << "    delta_angle: " << delta_angle << endl;
-            */
+            // cerr << "  End: " << end << endl;
+            // cerr << "    delta_angle: " << delta_angle << endl;
             double delta_delta_angle = abs(best_delta_angle - delta_angle);
             if( delta_delta_angle < EPSILON ) {
                 // If on the same line, pick the closer one
